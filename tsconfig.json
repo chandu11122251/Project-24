@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "types": [],
+    "typeRoots": []
+  },
+  "references": [
+    {
+      "path": "./frontend"
+    }
+  ]
+}
