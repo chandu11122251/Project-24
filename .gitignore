@@ -1,0 +1,3 @@
+# Ignore modules:
+frontend/.vite
+frontend/node_modules
