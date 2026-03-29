@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, FormEvent } from "react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -152,7 +152,7 @@ export default function LoginPage() {
     };
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = (e: FormEvent) => {
     e.preventDefault();
     console.log("Login attempted with:", email, password);
   };
