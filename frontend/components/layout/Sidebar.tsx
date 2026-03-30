@@ -20,6 +20,10 @@ function cn(...inputs: Array<string | false | null | undefined>) {
   return twMerge(clsx(inputs));
 }
 
+function ItemLabel({ text, className }: { text: string; className?: string }) {
+  return <span className={cn("hidden lg:inline", className)}>{text}</span>;
+}
+
 type SectionItem = {
   id: string;
   label: string;
@@ -87,10 +91,6 @@ export default function Sidebar() {
     window.addEventListener("toggle-sidebar", handler);
     return () => window.removeEventListener("toggle-sidebar", handler);
   }, []);
-
-  const ItemLabel = ({ text, className }: { text: string; className?: string }) => (
-    <span className={cn("hidden lg:inline", className)}>{text}</span>
-  );
 
   const navBody = (
     <div className="flex h-full flex-col">

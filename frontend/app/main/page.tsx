@@ -166,7 +166,7 @@ export default function MainPage() {
             Welcome to Main
           </h1>
           <p className="text-lg md:text-xl text-zinc-300 max-w-2xl mx-auto">
-            You've successfully set up the dynamic background. Navigate the stars 
+            You&apos;ve successfully set up the dynamic background. Navigate the stars 
             and interact with the constellation field above.
           </p>
         </div>
