@@ -1,13 +1,13 @@
 import Link from "next/link";
 
 const links = [
-  { label: "Home", href: "#hero" },
-  { label: "Puzzle Games", href: "#puzzle-games" },
-  { label: "Challenges", href: "#challenges" },
-  { label: "Hackathons", href: "#hackathons" },
-  { label: "Webinars", href: "#webinar" },
-  { label: "Study Groups", href: "#study-groups" },
-  { label: "About Us", href: "#about-us" },
+  { label: "Home", href: "/main#hero" },
+  { label: "Puzzle Games", href: "/main#puzzle-games" },
+  { label: "Challenges", href: "/main#challenges" },
+  { label: "Hackathons", href: "/main#hackathons" },
+  { label: "Webinars", href: "/main#webinar" },
+  { label: "Study Groups", href: "/main#study-groups" },
+  { label: "About Us", href: "/main#about-us" },
 ];
 
 export default function Footer() {

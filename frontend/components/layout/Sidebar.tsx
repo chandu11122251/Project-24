@@ -2,19 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { ComponentType } from "react";
+import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {
-  BookOpen,
-  Code2,
-  Info,
-  Puzzle,
-  User,
-  Video,
-  X,
-  Zap,
-} from "lucide-react";
+import { BookOpen, Code2, Puzzle, Users, Zap } from "lucide-react";
+import BorderGlow from "@/components/effects/BorderGlow";
 
 function cn(...inputs: Array<string | false | null | undefined>) {
   return twMerge(clsx(inputs));
@@ -43,195 +35,168 @@ function ItemLabel({
 }
 
 type SectionItem = {
-  id: string;
   label: string;
-  href: string;
-  Icon: ComponentType<{ className?: string }>;
+  anchor: string;
+  Icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
 };
 
 type SidebarProps = {
   hideTopOffset?: boolean;
 };
 
-function useActiveSection(ids: string[]) {
-  const [activeId, setActiveId] = useState<string>(ids[0] ?? "");
-
-  useEffect(() => {
-    const elements = ids
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => el !== null);
-
-    if (!elements.length) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-
-        if (visible[0]?.target.id) {
-          setActiveId(visible[0].target.id);
-        }
-      },
-      {
-        root: null,
-        rootMargin: "-35% 0px -45% 0px",
-        threshold: [0.2, 0.35, 0.5, 0.7],
-      }
-    );
-
-    elements.forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-  }, [ids]);
-
-  return activeId;
-}
-
 export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(true);
+  const [activeAnchor, setActiveAnchor] = useState<string>("#puzzle-games");
 
   const sectionItems = useMemo<SectionItem[]>(
     () => [
-      { id: "puzzle-games", label: "Puzzle Games", href: "#puzzle-games", Icon: Puzzle },
-      { id: "challenges", label: "Challenges", href: "#challenges", Icon: Zap },
-      { id: "hackathons", label: "Hackathons", href: "#hackathons", Icon: Code2 },
-      { id: "webinar", label: "Webinar", href: "#webinar", Icon: Video },
-      {
-        id: "study-groups",
-        label: "Study Groups",
-        href: "#study-groups",
-        Icon: BookOpen,
-      },
+      { label: "Puzzle Games", anchor: "#puzzle-games", Icon: Puzzle },
+      { label: "Challenges", anchor: "#challenges", Icon: Zap, badge: "7" },
+      { label: "Hackathons", anchor: "#hackathons", Icon: Code2, badge: "3" },
+      { label: "Study Groups", anchor: "#study-groups", Icon: Users, badge: "12" },
+      { label: "About", anchor: "#about", Icon: BookOpen },
     ],
     []
   );
 
-  const activeId = useActiveSection(sectionItems.map((item) => item.id));
+  const sectionIds = sectionItems.map((item) => item.anchor.replace("#", ""));
 
-  useEffect(() => {
-    const handler = () => {
-      if (window.innerWidth >= 768) {
-        setCollapsed((prev) => !prev);
-        return;
-      }
-      setMobileOpen((prev) => !prev);
-    };
-
-    window.addEventListener("toggle-sidebar", handler);
-    return () => window.removeEventListener("toggle-sidebar", handler);
-  }, []);
+  const sectionHref = (anchor: string) =>
+    pathname.startsWith("/main") ? anchor : `/main${anchor}`;
 
   useEffect(() => {
     document.documentElement.classList.toggle("sidebar-collapsed", collapsed);
     return () => document.documentElement.classList.remove("sidebar-collapsed");
   }, [collapsed]);
 
-  const navBody = (
-    <div className="flex h-full flex-col">
-      <div className="px-3 pt-3">
-        <Link
-          href="/profile"
-          className={cn(
-            "flex rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white",
-            collapsed ? "justify-center" : "items-center gap-3"
-          )}
-          onClick={() => setMobileOpen(false)}
-        >
-          <User className="h-4 w-4 shrink-0" />
-          <ItemLabel text="Profile" collapsed={collapsed} />
-        </Link>
-      </div>
+  useEffect(() => {
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter((element): element is HTMLElement => Boolean(element));
 
-      <nav className="flex flex-1 flex-col px-3 py-3">
-        {sectionItems.map(({ id, label, href, Icon }) => {
-          const isActive = activeId === id;
-          return (
-            <a
-              key={id}
-              href={href}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
-                collapsed && "justify-center gap-0",
-                isActive
-                  ? "bg-cyan-300/15 text-cyan-100 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.4)]"
-                  : "text-white/70 hover:bg-white/10 hover:text-white"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <ItemLabel text={label} collapsed={collapsed} />
-            </a>
-          );
-        })}
+    if (!elements.length) return;
 
-        <a
-          href="#about-us"
-          onClick={() => setMobileOpen(false)}
-          className={cn(
-            "mt-auto flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-light tracking-wide",
-            collapsed && "justify-center gap-0",
-            activeId === "about-us"
-              ? "bg-white/10 text-cyan-100"
-              : "text-white/50 hover:bg-white/10 hover:text-white"
-          )}
-        >
-          <Info className="h-4 w-4 shrink-0" />
-          <ItemLabel text="About Us" collapsed={collapsed} className="text-xs" />
-        </a>
-      </nav>
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
 
-      <div className="mx-3 mb-3 mt-2 border-t border-white/10 pt-3 text-center text-[11px] text-white/40 lg:text-left lg:pl-3">
-        <span
-          className={cn(
-            "overflow-hidden whitespace-nowrap transition-all duration-200",
-            collapsed ? "pointer-events-none w-0 opacity-0" : "hidden lg:inline w-auto opacity-100"
-          )}
-        >
-          Project-24 v1.0
-        </span>
-        <span className="lg:hidden">v1.0</span>
-      </div>
-    </div>
-  );
+        if (visibleEntry?.target.id) {
+          setActiveAnchor(`#${visibleEntry.target.id}`);
+        }
+      },
+      {
+        threshold: [0.2, 0.35, 0.5, 0.65],
+        rootMargin: "-12% 0px -55% 0px",
+      }
+    );
+
+    elements.forEach((element) => observer.observe(element));
+
+    return () => observer.disconnect();
+  }, [sectionIds]);
+
+  const navLinkClassName = (anchor: string) =>
+    cn(
+      "group relative flex items-center rounded-lg border border-transparent text-[13px] transition-all duration-200",
+      collapsed ? "justify-center px-1.5 py-2" : "gap-2.5 px-2 py-2",
+      activeAnchor === anchor
+        ? "border-[#12908f]/40 bg-[#0d6e6e]/15 text-[#12908f]"
+        : "text-[#666] hover:bg-white/5 hover:text-[#e8e8e8]"
+    );
 
   return (
-    <>
-      <aside
-        className={cn(
-          "fixed left-0 z-40 hidden overflow-hidden border-r border-white/10 bg-black/40 backdrop-blur-lg md:flex",
-          hideTopOffset ? "top-0 h-dvh" : "top-16 h-[calc(100dvh-4rem)]",
-          collapsed ? "w-20" : "w-64"
-        )}
+    <aside
+      className={cn(
+        "fixed left-0 z-40 hidden md:flex",
+        hideTopOffset ? "top-0 h-dvh" : "top-16 h-[calc(100dvh-4rem)]",
+        collapsed ? "w-[54px]" : "w-[220px]"
+      )}
+    >
+      <BorderGlow
+        edgeSensitivity={30}
+        glowColor="40 80 80"
+        backgroundColor="#090909"
+        borderRadius={0}
+        glowRadius={16}
+        glowIntensity={0.65}
+        coneSpread={20}
+        animated={false}
+        colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+        className="h-full w-full"
       >
-        {navBody}
-      </aside>
+      <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-[#0d6e6e]/60 to-transparent" />
 
-      <div
-        className={cn(
-          "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition md:hidden",
-          mobileOpen ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
-        )}
-      >
-        <aside
+      <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-[22px] border border-[#0d6e6e]/20 border-l-0 bg-[#090909]">
+        <div
           className={cn(
-            "h-full w-72 border-r border-white/15 bg-[#070d18] transition-transform",
-            mobileOpen ? "translate-x-0" : "-translate-x-full"
+            "flex min-h-[58px] items-center border-b border-[#0d6e6e]/20 py-3",
+            collapsed ? "justify-center px-2" : "gap-2 px-3"
           )}
         >
-          <div className="flex h-12 items-center justify-end px-3">
-            <button
-              type="button"
-              onClick={() => setMobileOpen(false)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-white/15 text-white/70"
-              aria-label="Close sidebar"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed((prev) => !prev)}
+            className="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[7px] border border-[#084444] bg-[#0d6e6e]/15 transition-colors hover:border-[#0d6e6e] hover:bg-[#0d6e6e]/30"
+            aria-label="Toggle sidebar"
+          >
+            <svg viewBox="0 0 15 15" className="h-3.5 w-3.5" fill="none" aria-hidden="true">
+              <path d="M2 4h11M2 7.5h11M2 11h11" stroke="#12908f" strokeWidth="1.4" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          <div className={cn("overflow-hidden whitespace-nowrap transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-[120px] opacity-100")}>
+            <p className="font-semibold tracking-[0.03em] text-[#e8e8e8]">Project-24</p>
           </div>
-          {navBody}
-        </aside>
+        </div>
+
+        <div className="flex flex-1 flex-col gap-1 px-2 py-2">
+          <Link
+            href="/profile"
+            className={cn(
+              "flex items-center rounded-lg py-2 hover:bg-white/5",
+              collapsed ? "justify-center px-0" : "gap-2.5 px-2"
+            )}
+          >
+            <span className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-[#0d6e6e] bg-[#084444] text-[11px] font-semibold text-[#12908f]">
+              P
+            </span>
+            <span className={cn("overflow-hidden transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+              <span className="block whitespace-nowrap text-xs text-[#e8e8e8]">Profile</span>
+            </span>
+          </Link>
+
+          <div className="my-1 h-px bg-[#0d6e6e]/20" />
+
+          <nav className="flex flex-1 flex-col gap-1">
+            {sectionItems.map(({ label, anchor, Icon, badge }) => (
+              <a
+                key={anchor}
+                href={sectionHref(anchor)}
+                onClick={() => setActiveAnchor(anchor)}
+                className={navLinkClassName(anchor)}
+              >
+                {activeAnchor === anchor && <span className="absolute left-0 top-1/2 h-2/3 w-[2.5px] -translate-y-1/2 rounded-r-sm bg-[#12908f]" />}
+                <span className={cn("inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-[7px] transition", activeAnchor === anchor ? "bg-[#0d6e6e]/35 text-[#12908f]" : "text-[#888]")}>
+                  <Icon className="h-4 w-4" />
+                </span>
+                <span className={cn("overflow-hidden whitespace-nowrap transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+                  {label}
+                </span>
+                {badge ? (
+                  <span className={cn("ml-auto rounded-full border border-[#0d6e6e]/40 bg-[#084444] px-2 py-0.5 text-[10px] text-[#12908f] transition-all duration-300", collapsed ? "hidden" : "w-auto opacity-100")}>
+                    {badge}
+                  </span>
+                ) : null}
+              </a>
+            ))}
+          </nav>
+        </div>
       </div>
-    </>
+      </BorderGlow>
+    </aside>
   );
 }

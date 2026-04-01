@@ -1,159 +1,410 @@
 "use client";
 
-import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
+import BorderGlow from "@/components/effects/BorderGlow";
+import StarBorder from "@/components/effects/StarBorder";
 
-export default function MainPage() {
-  const [mode, setMode] = useState<"signup" | "signin">("signup");
-  const [signupEmail, setSignupEmail] = useState("");
-  const [signinEmail, setSigninEmail] = useState("");
-  const [signinPassword, setSigninPassword] = useState("");
+const puzzleTracks = [
+  {
+    title: "Daily Logic Sprint",
+    detail: "10-minute puzzle rounds focused on patterns, arrays, and edge cases.",
+  },
+  {
+    title: "Concept Unlocks",
+    detail: "Unlock the next level by posting a clear explanation, not just a solution.",
+  },
+  {
+    title: "Team Puzzle Arena",
+    detail: "Solve cooperative puzzles where each teammate gets partial clues.",
+  },
+];
 
-  const handleSignup = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Sign-up with:", signupEmail);
-  };
+const challengeMilestones = [
+  "7-Day Data Structures Challenge",
+  "Weekly debugging relay",
+  "Monthly streak leaderboard",
+];
 
-  const handleSignin = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log("Sign-in with:", signinEmail, signinPassword);
-  };
+const hackathonTracks = [
+  "AI Study Companion",
+  "Peer Tutoring Matchmaker",
+  "Campus Learning Dashboard",
+];
 
-  const inputClass =
-    "w-full px-4 py-3 rounded-lg bg-black/40 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-all text-sm font-medium";
-  const submitClass =
-    "w-full py-3 rounded-lg bg-teal-500/80 hover:bg-teal-400 text-white font-semibold shadow-[0_0_15px_rgba(0,229,195,0.4)] hover:shadow-[0_0_25px_rgba(0,229,195,0.6)] transition-all text-sm";
-  const oauthClass =
-    "flex items-center justify-center gap-3 w-full py-3 rounded-lg bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 hover:border-white/20 transition-all text-sm font-medium";
+const studyGroups = ["Frontend Guild", "DSA Sprint Crew", "Backend Builders", "System Design Circle"];
+
+function cn(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <header className="space-y-3">
+      <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">{title}</p>
+      <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{title}</h2>
+      <p className="max-w-2xl text-sm leading-6 text-white/72 md:text-base">{subtitle}</p>
+    </header>
+  );
+}
+
+function PrimaryCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <BorderGlow
+      edgeSensitivity={30}
+      glowColor="40 80 80"
+      backgroundColor="#060010"
+      borderRadius={20}
+      glowRadius={24}
+      glowIntensity={0.7}
+      coneSpread={24}
+      animated={false}
+      colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+      className={className}
+    >
+      <div className="rounded-2xl bg-white/[0.04] p-4 text-sm text-white/85 transition-colors duration-200 hover:bg-white/[0.07]">
+        {children}
+      </div>
+    </BorderGlow>
+  );
+}
+
+function AccentCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <BorderGlow
+      edgeSensitivity={30}
+      glowColor="40 80 80"
+      backgroundColor="#060010"
+      borderRadius={20}
+      glowRadius={24}
+      glowIntensity={0.75}
+      coneSpread={24}
+      animated={false}
+      colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+      className={className}
+    >
+      <div className="rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.08] p-4 text-sm leading-6 text-cyan-50/90">
+        {children}
+      </div>
+    </BorderGlow>
+  );
+}
+
+function FadeInSection({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      {
+        threshold: 0.2,
+        rootMargin: "0px 0px -12% 0px",
+      }
+    );
+
+    observer.observe(element);
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
-    <StarfieldBackground>
+    <div
+      ref={ref}
+      className={cn(
+        "transform-gpu transition-all duration-500",
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
+        className
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+export default function MainPage() {
+  const [underlineReady, setUnderlineReady] = useState(false);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setUnderlineReady(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <StarfieldBackground className="relative min-h-screen w-full overflow-y-auto bg-[#06070f] px-4 py-4 text-white md:px-6 md:py-6">
       <Link
         href="/login"
-        className="fixed right-4 top-4 z-20 inline-flex items-center gap-2 rounded-full border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-sm font-medium text-cyan-100 transition hover:bg-cyan-300/15"
+        className="group fixed right-4 top-4 z-50"
       >
-        Sign In / Sign Up
+        <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
+          <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
+            <span className="group-hover:hidden">Sign In/Sign Up</span>
+            <span className="hidden group-hover:inline">→ Sign In/Sign Up</span>
+          </span>
+        </StarBorder>
       </Link>
 
-      <main className="relative z-10 flex w-full max-w-[420px] flex-col items-center gap-6 rounded-2xl border border-white/10 bg-white/5 p-8 text-white shadow-2xl backdrop-blur-md">
-        {mode === "signup" && (
-          <div className="w-full space-y-6 transition-all duration-300">
-            <div className="w-full space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-white/90">Create account</h1>
-              <p className="text-sm text-zinc-400">Join us - it&apos;s free</p>
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 pb-14 md:gap-14">
+        <FadeInSection>
+          <section
+            id="hero"
+            className="relative flex min-h-[100svh] scroll-mt-10 flex-col items-center justify-center overflow-hidden px-5 py-8 md:px-10 md:py-12"
+          >
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 z-0 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle, rgba(103,232,249,0.04) 1px, transparent 1px)",
+                backgroundSize: "32px 32px",
+              }}
+            />
+            <div className="relative z-10 flex w-full items-center justify-center">
+              <h1 className="text-center bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-6xl font-black leading-[0.92] tracking-[-0.06em] text-transparent drop-shadow-[0_0_40px_rgba(103,232,249,0.35)] sm:text-7xl md:text-[7.5rem] lg:text-[9rem]">
+                Project -24
+              </h1>
             </div>
+            <div className="relative z-10 mt-6 h-[2px] w-[120px] origin-left rounded-full bg-cyan-300/80 transition-transform duration-[800ms] ease-out" style={{ transform: underlineReady ? "scaleX(1)" : "scaleX(0)" }} />
+          </section>
+        </FadeInSection>
 
-            <div className="flex w-full flex-col gap-3">
-              <button type="button" className={oauthClass}>
-                <svg width="18" height="18" viewBox="0 0 48 48">
-                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                  <path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 0 1 0-9.18l-7.97-6.19a24.014 24.014 0 0 0 0 21.56l7.97-6.19z" />
-                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                </svg>
-                Continue with Google
-              </button>
-
-              <button type="button" className={oauthClass}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                  <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                </svg>
-                Continue with GitHub
-              </button>
-            </div>
-
-            <div className="flex w-full items-center gap-3">
-              <hr className="flex-1 border-white/10" />
-              <span className="text-xs uppercase tracking-wider text-zinc-500">or continue with email</span>
-              <hr className="flex-1 border-white/10" />
-            </div>
-
-            <form onSubmit={handleSignup} className="w-full space-y-4">
-              <input
-                id="signup-email"
-                type="email"
-                value={signupEmail}
-                onChange={(e) => setSignupEmail(e.target.value)}
-                className={inputClass}
-                placeholder="you@example.com"
-                required
-              />
-              <button type="submit" className={submitClass}>
-                Continue
-              </button>
-            </form>
-
-            <div className="flex w-full items-center justify-between pt-2 text-sm">
-              <Link href="/main" className="text-white/50 transition-colors hover:text-white">
-                ← Back
-              </Link>
-              <button
-                type="button"
-                onClick={() => setMode("signin")}
-                className="text-teal-400 transition-colors hover:text-teal-300"
-              >
-                Already have an account? Sign in →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {mode === "signin" && (
-          <div className="w-full space-y-6 transition-all duration-300">
-            <div className="w-full space-y-2 text-center">
-              <h1 className="text-3xl font-bold tracking-tight text-white/90">Welcome Back</h1>
-              <p className="text-sm text-zinc-400">Sign in to your account</p>
-            </div>
-
-            <form onSubmit={handleSignin} className="w-full space-y-4 text-left">
-              <div className="space-y-2">
-                <label className="ml-1 text-sm text-zinc-300" htmlFor="signin-email">
-                  Email
-                </label>
-                <input
-                  id="signin-email"
-                  type="email"
-                  value={signinEmail}
-                  onChange={(e) => setSigninEmail(e.target.value)}
-                  className={inputClass}
-                  placeholder="you@example.com"
-                  required
+        <FadeInSection>
+          <section
+            id="puzzle-games"
+            className="scroll-mt-8"
+          >
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              borderRadius={32}
+              glowRadius={30}
+              glowIntensity={0.75}
+              coneSpread={24}
+              animated={false}
+              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+            >
+              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
+                <SectionTitle
+                  title="Puzzle Games"
+                  subtitle="Sharpen speed and clarity with bite-sized collaborative puzzles that open the flow of the page."
                 />
+                <ul className="mt-8 grid gap-6 md:grid-cols-3 md:gap-7">
+                  {puzzleTracks.map((track) => (
+                    <li key={track.title} className="cursor-default">
+                      <PrimaryCard>
+                        <p className="text-lg font-semibold text-white">{track.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-white/72">{track.detail}</p>
+                      </PrimaryCard>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="space-y-2">
-                <label className="ml-1 text-sm text-zinc-300" htmlFor="signin-password">
-                  Password
-                </label>
-                <input
-                  id="signin-password"
-                  type="password"
-                  value={signinPassword}
-                  onChange={(e) => setSigninPassword(e.target.value)}
-                  className={inputClass}
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
-              <button type="submit" className={submitClass}>
-                Sign In
-              </button>
-            </form>
+            </BorderGlow>
+          </section>
+        </FadeInSection>
 
-            <div className="flex w-full items-center justify-between pt-2 text-sm">
-              <button
-                type="button"
-                onClick={() => setMode("signup")}
-                className="text-white/50 transition-colors hover:text-white"
-              >
-                ← Create account
-              </button>
-              <Link href="/forgot-password" className="text-teal-400 transition-colors hover:text-teal-300">
-                Forgot password?
-              </Link>
-            </div>
-          </div>
-        )}
+        <FadeInSection>
+          <section
+            id="challenges"
+            className="scroll-mt-8"
+          >
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              borderRadius={32}
+              glowRadius={30}
+              glowIntensity={0.75}
+              coneSpread={24}
+              animated={false}
+              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+            >
+              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
+                <SectionTitle
+                  title="Challenges"
+                  subtitle="Build consistency through weekly tasks that reward progress and explanation quality."
+                />
+                <div className="mt-8 grid gap-6 md:grid-cols-[1.4fr_0.6fr] md:gap-7">
+                  <ul className="grid gap-5">
+                    {challengeMilestones.map((item, index) => (
+                      <li key={item} className="cursor-default">
+                        {index === 0 ? (
+                          <AccentCard>
+                            <span className="font-medium text-cyan-50">{item}</span>
+                          </AccentCard>
+                        ) : (
+                          <PrimaryCard>
+                            <span>{item}</span>
+                          </PrimaryCard>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <AccentCard>
+                    Next cycle starts every Monday. Keep the momentum going and the page will carry you
+                    into the next block.
+                  </AccentCard>
+                </div>
+              </div>
+            </BorderGlow>
+          </section>
+        </FadeInSection>
+
+        <FadeInSection>
+          <section
+            id="hackathons"
+            className="scroll-mt-8"
+          >
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              borderRadius={32}
+              glowRadius={30}
+              glowIntensity={0.75}
+              coneSpread={24}
+              animated={false}
+              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+            >
+              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
+                <SectionTitle
+                  title="Hackathons"
+                  subtitle="Rapid team sprints where learners build practical products with mentor feedback."
+                />
+                <ol className="mt-8 grid gap-6 md:grid-cols-3 md:gap-7">
+                  {hackathonTracks.map((track, index) => (
+                    <li key={track} className="cursor-default">
+                      <PrimaryCard>
+                        <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/70">0{index + 1}</p>
+                        <p className="mt-3 text-lg font-semibold text-white">{track}</p>
+                      </PrimaryCard>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            </BorderGlow>
+          </section>
+        </FadeInSection>
+
+        <FadeInSection>
+          <section
+            id="study-groups"
+            className="scroll-mt-8"
+          >
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              borderRadius={32}
+              glowRadius={30}
+              glowIntensity={0.75}
+              coneSpread={24}
+              animated={false}
+              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+            >
+              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
+                <SectionTitle
+                  title="Study Groups"
+                  subtitle="Join focused circles for accountability check-ins and peer-led revision."
+                />
+                <ul className="mt-8 grid gap-5 md:grid-cols-2 md:gap-6">
+                  {studyGroups.map((group) => (
+                    <li key={group} className="cursor-default">
+                      <PrimaryCard>
+                        <span>{group}</span>
+                      </PrimaryCard>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </BorderGlow>
+          </section>
+        </FadeInSection>
+
+        <FadeInSection>
+          <section
+            id="about"
+            className="scroll-mt-8"
+          >
+            <BorderGlow
+              edgeSensitivity={30}
+              glowColor="40 80 80"
+              backgroundColor="#060010"
+              borderRadius={32}
+              glowRadius={30}
+              glowIntensity={0.75}
+              coneSpread={24}
+              animated={false}
+              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+            >
+              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
+                <SectionTitle
+                  title="About Project-24"
+                  subtitle="A peer-to-peer learning platform built for students, by students."
+                />
+                <div className="mt-8 grid gap-7 md:grid-cols-[1fr_1fr] md:gap-9">
+                  <p className="max-w-2xl text-sm leading-7 text-white/75 md:text-base">
+                    Project-24 exists to make learning feel collaborative instead of isolated. Students can
+                    move through practical puzzles, weekly challenges, and team build sessions while sharing
+                    what they know with classmates who are on the same journey.
+                  </p>
+                  <div className="grid grid-cols-2 gap-5 md:gap-6">
+                    <PrimaryCard className="cursor-default">
+                      <p className="text-xl font-bold text-white">6 Modules</p>
+                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Focused learning paths that keep the journey structured.</p>
+                    </PrimaryCard>
+                    <PrimaryCard className="cursor-default">
+                      <p className="text-xl font-bold text-white">Weekly Challenges</p>
+                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">A cadence that keeps students practicing and shipping.</p>
+                    </PrimaryCard>
+                    <PrimaryCard className="cursor-default">
+                      <p className="text-xl font-bold text-white">Open Source</p>
+                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Built with transparent tooling and room to contribute.</p>
+                    </PrimaryCard>
+                    <PrimaryCard className="cursor-default">
+                      <p className="text-xl font-bold text-white">Student-First</p>
+                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Designed around peer learning, not passive consumption.</p>
+                    </PrimaryCard>
+                  </div>
+                </div>
+              </div>
+            </BorderGlow>
+          </section>
+        </FadeInSection>
+
+        <footer className="mt-10 w-full px-2 pb-4 text-center text-sm text-zinc-300/80 md:text-base">
+          <div className="mb-4 h-px w-full bg-white/20" />
+          <p className="backdrop-blur-[2px] text-zinc-300/75">© 2026 Project-24. All rights reserved.</p>
+        </footer>
       </main>
     </StarfieldBackground>
   );

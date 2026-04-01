@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
+import BorderGlow from "@/components/effects/BorderGlow";
 
 type Mode = "signup" | "signin";
 
@@ -37,7 +38,19 @@ export default function LoginPage() {
 
   return (
     <StarfieldBackground>
-      <main className="relative z-10 flex flex-col items-center w-full max-w-[420px] gap-6 text-white backdrop-blur-md bg-white/5 p-8 rounded-2xl border border-white/10 shadow-2xl">
+      <BorderGlow
+        edgeSensitivity={30}
+        glowColor="40 80 80"
+        backgroundColor="#060010"
+        borderRadius={24}
+        glowRadius={28}
+        glowIntensity={0.75}
+        coneSpread={24}
+        animated={false}
+        colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+        className="relative z-10 w-full max-w-[420px]"
+      >
+      <main className="flex flex-col items-center gap-6 rounded-2xl border border-white/10 bg-white/5 p-8 text-white backdrop-blur-md shadow-2xl">
         {/* ════════ SIGN UP ════════ */}
         {mode === "signup" && (
           <div className="w-full space-y-6 transition-all duration-300">
@@ -186,6 +199,7 @@ export default function LoginPage() {
           </div>
         )}
       </main>
+      </BorderGlow>
     </StarfieldBackground>
   );
 }

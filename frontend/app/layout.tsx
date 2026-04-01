@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import AppFrame from "../components/layout/AppFrame";
+import RippleGridBackground from "../components/background/RippleGridBackground";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,10 +16,6 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Project-24",
   description: "Peer-to-peer learning platform",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({
@@ -30,10 +26,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} dark h-full w-full antialiased`}
     >
-      <body className="min-h-full bg-gray-950 text-white">
-        <AppFrame>{children}</AppFrame>
+      <body className="min-h-full w-full bg-[#06070f] text-white overflow-x-hidden m-0 p-0">
+        <RippleGridBackground>{children}</RippleGridBackground>
       </body>
     </html>
   );
