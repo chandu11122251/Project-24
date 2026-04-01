@@ -20,8 +20,26 @@ function cn(...inputs: Array<string | false | null | undefined>) {
   return twMerge(clsx(inputs));
 }
 
-function ItemLabel({ text, className }: { text: string; className?: string }) {
-  return <span className={cn("hidden lg:inline", className)}>{text}</span>;
+function ItemLabel({
+  text,
+  collapsed,
+  className,
+}: {
+  text: string;
+  collapsed: boolean;
+  className?: string;
+}) {
+  return (
+    <span
+      className={cn(
+        "overflow-hidden whitespace-nowrap transition-all duration-200",
+        collapsed ? "pointer-events-none w-0 opacity-0" : "w-auto opacity-100",
+        className
+      )}
+    >
+      {text}
+    </span>
+  );
 }
 
 type SectionItem = {
@@ -29,6 +47,10 @@ type SectionItem = {
   label: string;
   href: string;
   Icon: ComponentType<{ className?: string }>;
+};
+
+type SidebarProps = {
+  hideTopOffset?: boolean;
 };
 
 function useActiveSection(ids: string[]) {
@@ -65,8 +87,9 @@ function useActiveSection(ids: string[]) {
   return activeId;
 }
 
-export default function Sidebar() {
+export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const sectionItems = useMemo<SectionItem[]>(
     () => [
@@ -87,21 +110,36 @@ export default function Sidebar() {
   const activeId = useActiveSection(sectionItems.map((item) => item.id));
 
   useEffect(() => {
-    const handler = () => setMobileOpen((prev) => !prev);
+    const handler = () => {
+      if (window.innerWidth >= 768) {
+        setCollapsed((prev) => !prev);
+        return;
+      }
+      setMobileOpen((prev) => !prev);
+    };
+
     window.addEventListener("toggle-sidebar", handler);
     return () => window.removeEventListener("toggle-sidebar", handler);
   }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("sidebar-collapsed", collapsed);
+    return () => document.documentElement.classList.remove("sidebar-collapsed");
+  }, [collapsed]);
 
   const navBody = (
     <div className="flex h-full flex-col">
       <div className="px-3 pt-3">
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white"
+          className={cn(
+            "flex rounded-xl px-3 py-2 text-sm text-white/80 transition hover:bg-white/10 hover:text-white",
+            collapsed ? "justify-center" : "items-center gap-3"
+          )}
           onClick={() => setMobileOpen(false)}
         >
           <User className="h-4 w-4 shrink-0" />
-          <ItemLabel text="Profile" />
+          <ItemLabel text="Profile" collapsed={collapsed} />
         </Link>
       </div>
 
@@ -115,13 +153,14 @@ export default function Sidebar() {
               onClick={() => setMobileOpen(false)}
               className={cn(
                 "mb-1 flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition",
+                collapsed && "justify-center gap-0",
                 isActive
                   ? "bg-cyan-300/15 text-cyan-100 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.4)]"
                   : "text-white/70 hover:bg-white/10 hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              <ItemLabel text={label} />
+              <ItemLabel text={label} collapsed={collapsed} />
             </a>
           );
         })}
@@ -131,18 +170,26 @@ export default function Sidebar() {
           onClick={() => setMobileOpen(false)}
           className={cn(
             "mt-auto flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-light tracking-wide",
+            collapsed && "justify-center gap-0",
             activeId === "about-us"
               ? "bg-white/10 text-cyan-100"
               : "text-white/50 hover:bg-white/10 hover:text-white"
           )}
         >
           <Info className="h-4 w-4 shrink-0" />
-          <ItemLabel text="About Us" className="text-xs" />
+          <ItemLabel text="About Us" collapsed={collapsed} className="text-xs" />
         </a>
       </nav>
 
       <div className="mx-3 mb-3 mt-2 border-t border-white/10 pt-3 text-center text-[11px] text-white/40 lg:text-left lg:pl-3">
-        <span className="hidden lg:inline">Project-24 v1.0</span>
+        <span
+          className={cn(
+            "overflow-hidden whitespace-nowrap transition-all duration-200",
+            collapsed ? "pointer-events-none w-0 opacity-0" : "hidden lg:inline w-auto opacity-100"
+          )}
+        >
+          Project-24 v1.0
+        </span>
         <span className="lg:hidden">v1.0</span>
       </div>
     </div>
@@ -150,7 +197,13 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="fixed left-0 top-16 z-40 hidden h-[calc(100dvh-4rem)] w-20 border-r border-white/10 bg-black/40 backdrop-blur-lg md:flex lg:w-64">
+      <aside
+        className={cn(
+          "fixed left-0 z-40 hidden overflow-hidden border-r border-white/10 bg-black/40 backdrop-blur-lg md:flex",
+          hideTopOffset ? "top-0 h-dvh" : "top-16 h-[calc(100dvh-4rem)]",
+          collapsed ? "w-20" : "w-64"
+        )}
+      >
         {navBody}
       </aside>
 

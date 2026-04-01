@@ -133,3 +133,23 @@
     scroll-behavior: smooth;
   }
 }
+
+.app-main {
+  padding-top: 4rem;
+  padding-left: 0;
+  transition: padding-left 220ms ease;
+}
+
+.app-main--no-navbar {
+  padding-top: 0;
+}
+
+@media (min-width: 768px) {
+  .app-main {
+    padding-left: 16rem;
+  }
+
+  .sidebar-collapsed .app-main {
+    padding-left: 5rem;
+  }
+}

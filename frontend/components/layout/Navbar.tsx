@@ -27,7 +27,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/80 hover:bg-white/10 md:hidden"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-white/80 hover:bg-white/10"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-4 w-4" />
