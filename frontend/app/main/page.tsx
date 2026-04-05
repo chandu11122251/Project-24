@@ -2,105 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { BookOpen, Code2, Puzzle, Users, Video, Zap } from "lucide-react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
+import ModelWrappedTextCard from "@/components/sections/ModelWrappedTextCard";
 import BorderGlow from "@/components/effects/BorderGlow";
 import StarBorder from "@/components/effects/StarBorder";
 
-const puzzleTracks = [
-  {
-    title: "Daily Logic Sprint",
-    detail: "10-minute puzzle rounds focused on patterns, arrays, and edge cases.",
-  },
-  {
-    title: "Concept Unlocks",
-    detail: "Unlock the next level by posting a clear explanation, not just a solution.",
-  },
-  {
-    title: "Team Puzzle Arena",
-    detail: "Solve cooperative puzzles where each teammate gets partial clues.",
-  },
-];
-
-const challengeMilestones = [
-  "7-Day Data Structures Challenge",
-  "Weekly debugging relay",
-  "Monthly streak leaderboard",
-];
-
-const hackathonTracks = [
-  "AI Study Companion",
-  "Peer Tutoring Matchmaker",
-  "Campus Learning Dashboard",
-];
-
-const studyGroups = ["Frontend Guild", "DSA Sprint Crew", "Backend Builders", "System Design Circle"];
-
 function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
-}
-
-function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <header className="space-y-3">
-      <p className="text-xs uppercase tracking-[0.35em] text-cyan-200/70">{title}</p>
-      <h2 className="text-2xl font-semibold tracking-tight text-white md:text-3xl">{title}</h2>
-      <p className="max-w-2xl text-sm leading-6 text-white/72 md:text-base">{subtitle}</p>
-    </header>
-  );
-}
-
-function PrimaryCard({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <BorderGlow
-      edgeSensitivity={30}
-      glowColor="40 80 80"
-      backgroundColor="#060010"
-      borderRadius={20}
-      glowRadius={24}
-      glowIntensity={0.7}
-      coneSpread={24}
-      animated={false}
-      colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-      className={className}
-    >
-      <div className="rounded-2xl bg-white/[0.04] p-4 text-sm text-white/85 transition-colors duration-200 hover:bg-white/[0.07]">
-        {children}
-      </div>
-    </BorderGlow>
-  );
-}
-
-function AccentCard({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <BorderGlow
-      edgeSensitivity={30}
-      glowColor="40 80 80"
-      backgroundColor="#060010"
-      borderRadius={20}
-      glowRadius={24}
-      glowIntensity={0.75}
-      coneSpread={24}
-      animated={false}
-      colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-      className={className}
-    >
-      <div className="rounded-2xl border border-cyan-300/25 bg-cyan-300/[0.08] p-4 text-sm leading-6 text-cyan-50/90">
-        {children}
-      </div>
-    </BorderGlow>
-  );
 }
 
 function FadeInSection({
@@ -152,14 +61,126 @@ function FadeInSection({
 
 export default function MainPage() {
   const [underlineReady, setUnderlineReady] = useState(false);
+  const [activateModelAnimation, setActivateModelAnimation] = useState(false);
+  const [modelOverlayWidth, setModelOverlayWidth] = useState(0);
+  const [modelOverlayHeight, setModelOverlayHeight] = useState(0);
+  const cssBoxRef = useRef<HTMLDivElement>(null);
+  const sectionDescriptions = [
+    {
+      id: "puzzle-games",
+      title: "Puzzle Games",
+      Icon: Puzzle,
+      lines: [
+        "Solve bite-sized logic and algorithm puzzles designed for fast, focused practice that fits naturally into your daily schedule.",
+        "Collaborate in timed team rounds where every member contributes hints, reasoning paths, and final solution strategies.",
+        "Improve pattern recognition, communication clarity, and decision speed by revisiting concepts from multiple difficulty levels.",
+        "Track streaks, leaderboard progress, and concept mastery with each completed sprint, then use feedback to improve your next run.",
+        "Build confidence by moving from short warm-up puzzles to deeper challenge sets that mirror real interview and coding scenarios.",
+      ],
+    },
+    {
+      id: "challenges",
+      title: "Challenges",
+      Icon: Zap,
+      lines: [
+        "Take on weekly coding and problem-solving tasks with practical outcomes that strengthen both understanding and execution.",
+        "Submit your approach, receive detailed peer and mentor feedback, and refine how you structure, explain, and optimize your code.",
+        "Focus on consistency, clean thinking, and practical debugging under realistic constraints like time, readability, and edge cases.",
+        "Build momentum through structured milestones that reward progress over perfection and encourage long-term learning habits.",
+        "Use challenge reflections to identify weak areas early and convert them into focused practice goals for the following week.",
+      ],
+    },
+    {
+      id: "hackathons",
+      title: "Hackathons",
+      Icon: Code2,
+      lines: [
+        "Join rapid build sprints where teams turn ideas into working prototypes that solve meaningful student and community problems.",
+        "Work with mentors to define clear scope, split responsibilities effectively, and ship faster without sacrificing core quality.",
+        "Practice pitching, iterative building, and product thinking while strengthening technical execution in a high-energy environment.",
+        "Collaborate across design, frontend, backend, and strategy so every participant learns beyond a single specialized role.",
+        "End each sprint with demos, feedback loops, and clear next steps that help projects move from prototype to polished product.",
+      ],
+    },
+    {
+      id: "webinars",
+      title: "Webinars",
+      Icon: Video,
+      lines: [
+        "Attend live sessions with mentors, seniors, and industry professionals who share practical lessons from real projects.",
+        "Learn across engineering, productivity, communication, and career growth through focused talks with clear examples.",
+        "Take part in interactive Q and A discussions to clarify difficult concepts and understand how experts approach trade-offs.",
+        "Review case studies, workflows, and frameworks that can be directly applied to coursework, side projects, and internships.",
+        "Leave each webinar with actionable next steps you can implement immediately in your preparation and daily learning routine.",
+      ],
+    },
+    {
+      id: "study-groups",
+      title: "Study Groups",
+      Icon: Users,
+      lines: [
+        "Join focused peer circles organized around shared goals, target skills, and structured learning tracks.",
+        "Plan weekly revision sessions, accountability check-ins, and doubt-clearing rounds that keep everyone aligned.",
+        "Strengthen understanding by teaching concepts, reviewing each others solutions, and discussing alternate approaches.",
+        "Build discipline with small weekly commitments that make consistent progress easier and less overwhelming.",
+        "Create a dependable support system where members celebrate wins, solve blockers together, and stay motivated long-term.",
+      ],
+    },
+    {
+      id: "about-us",
+      title: "About Us",
+      Icon: BookOpen,
+      lines: [
+        "Project-24 is a learner-first community where students grow through practice, collaboration, and meaningful contribution.",
+        "Our model blends puzzle solving, challenges, hackathons, webinars, and study groups into one connected growth journey.",
+        "We value clarity, consistency, communication, and teamwork more than one-time performance or isolated results.",
+        "Every section is designed to convert passive study into active, real-world progress through repeatable learning loops.",
+        "The goal is simple: help learners become confident builders who can think clearly, explain well, and support others.",
+      ],
+    },
+  ];
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setUnderlineReady(true));
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
+  useEffect(() => {
+    const box = cssBoxRef.current;
+    if (!box) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setActivateModelAnimation(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const box = cssBoxRef.current;
+    if (!box) return;
+
+    const syncOverlayHeight = () => {
+      setModelOverlayWidth(box.getBoundingClientRect().width);
+      setModelOverlayHeight(box.offsetHeight);
+    };
+
+    syncOverlayHeight();
+    const resizeObserver = new ResizeObserver(() => syncOverlayHeight());
+    resizeObserver.observe(box);
+
+    return () => resizeObserver.disconnect();
+  }, []);
+
   return (
-    <StarfieldBackground className="relative min-h-screen w-full overflow-y-auto bg-[#06070f] px-4 py-4 text-white md:px-6 md:py-6">
+    <StarfieldBackground className="relative min-h-screen w-full overflow-x-hidden overflow-y-auto bg-[#06070f] px-4 py-4 text-white md:px-6 md:py-6">
       <Link
         href="/login"
         className="group fixed right-4 top-4 z-50"
@@ -172,7 +193,7 @@ export default function MainPage() {
         </StarBorder>
       </Link>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-10 pb-14 md:gap-14">
+      <main className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-10 pb-14 md:gap-14">
         <FadeInSection>
           <section
             id="hero"
@@ -196,209 +217,64 @@ export default function MainPage() {
           </section>
         </FadeInSection>
 
-        <FadeInSection>
-          <section
-            id="puzzle-games"
-            className="scroll-mt-8"
-          >
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              borderRadius={32}
-              glowRadius={30}
-              glowIntensity={0.75}
-              coneSpread={24}
-              animated={false}
-              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
+        <FadeInSection className="flex justify-center px-2">
+          <div className="relative inline-block">
+            <div
+              className="pointer-events-none absolute -left-14 -top-28 z-30"
+              style={{
+                width: modelOverlayWidth > 0 ? `${modelOverlayWidth + 56}px` : undefined,
+                height: modelOverlayHeight > 0 ? `${modelOverlayHeight + 112}px` : undefined,
+              }}
             >
-              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
-                <SectionTitle
-                  title="Puzzle Games"
-                  subtitle="Sharpen speed and clarity with bite-sized collaborative puzzles that open the flow of the page."
-                />
-                <ul className="mt-8 grid gap-6 md:grid-cols-3 md:gap-7">
-                  {puzzleTracks.map((track) => (
-                    <li key={track.title} className="cursor-default">
-                      <PrimaryCard>
-                        <p className="text-lg font-semibold text-white">{track.title}</p>
-                        <p className="mt-2 text-sm leading-6 text-white/72">{track.detail}</p>
-                      </PrimaryCard>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </BorderGlow>
-          </section>
-        </FadeInSection>
+              <ModelWrappedTextCard targetRef={cssBoxRef} animateOnView={activateModelAnimation} />
+            </div>
 
-        <FadeInSection>
-          <section
-            id="challenges"
-            className="scroll-mt-8"
-          >
             <BorderGlow
               edgeSensitivity={30}
               glowColor="40 80 80"
               backgroundColor="#060010"
-              borderRadius={32}
+              borderRadius={26}
               glowRadius={30}
               glowIntensity={0.75}
               coneSpread={24}
               animated={false}
               colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
             >
-              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
-                <SectionTitle
-                  title="Challenges"
-                  subtitle="Build consistency through weekly tasks that reward progress and explanation quality."
-                />
-                <div className="mt-8 grid gap-6 md:grid-cols-[1.4fr_0.6fr] md:gap-7">
-                  <ul className="grid gap-5">
-                    {challengeMilestones.map((item, index) => (
-                      <li key={item} className="cursor-default">
-                        {index === 0 ? (
-                          <AccentCard>
-                            <span className="font-medium text-cyan-50">{item}</span>
-                          </AccentCard>
-                        ) : (
-                          <PrimaryCard>
-                            <span>{item}</span>
-                          </PrimaryCard>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                  <AccentCard>
-                    Next cycle starts every Monday. Keep the momentum going and the page will carry you
-                    into the next block.
-                  </AccentCard>
-                </div>
-              </div>
-            </BorderGlow>
-          </section>
-        </FadeInSection>
-
-        <FadeInSection>
-          <section
-            id="hackathons"
-            className="scroll-mt-8"
-          >
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              borderRadius={32}
-              glowRadius={30}
-              glowIntensity={0.75}
-              coneSpread={24}
-              animated={false}
-              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-            >
-              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
-                <SectionTitle
-                  title="Hackathons"
-                  subtitle="Rapid team sprints where learners build practical products with mentor feedback."
-                />
-                <ol className="mt-8 grid gap-6 md:grid-cols-3 md:gap-7">
-                  {hackathonTracks.map((track, index) => (
-                    <li key={track} className="cursor-default">
-                      <PrimaryCard>
-                        <p className="text-xs uppercase tracking-[0.3em] text-cyan-200/70">0{index + 1}</p>
-                        <p className="mt-3 text-lg font-semibold text-white">{track}</p>
-                      </PrimaryCard>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </BorderGlow>
-          </section>
-        </FadeInSection>
-
-        <FadeInSection>
-          <section
-            id="study-groups"
-            className="scroll-mt-8"
-          >
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              borderRadius={32}
-              glowRadius={30}
-              glowIntensity={0.75}
-              coneSpread={24}
-              animated={false}
-              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-            >
-              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
-                <SectionTitle
-                  title="Study Groups"
-                  subtitle="Join focused circles for accountability check-ins and peer-led revision."
-                />
-                <ul className="mt-8 grid gap-5 md:grid-cols-2 md:gap-6">
-                  {studyGroups.map((group) => (
-                    <li key={group} className="cursor-default">
-                      <PrimaryCard>
-                        <span>{group}</span>
-                      </PrimaryCard>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </BorderGlow>
-          </section>
-        </FadeInSection>
-
-        <FadeInSection>
-          <section
-            id="about"
-            className="scroll-mt-8"
-          >
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              borderRadius={32}
-              glowRadius={30}
-              glowIntensity={0.75}
-              coneSpread={24}
-              animated={false}
-              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-            >
-              <div className="rounded-[2rem] bg-black/25 px-5 py-8 backdrop-blur-sm md:px-8 md:py-10">
-                <SectionTitle
-                  title="About Project-24"
-                  subtitle="A peer-to-peer learning platform built for students, by students."
-                />
-                <div className="mt-8 grid gap-7 md:grid-cols-[1fr_1fr] md:gap-9">
-                  <p className="max-w-2xl text-sm leading-7 text-white/75 md:text-base">
-                    Project-24 exists to make learning feel collaborative instead of isolated. Students can
-                    move through practical puzzles, weekly challenges, and team build sessions while sharing
-                    what they know with classmates who are on the same journey.
-                  </p>
-                  <div className="grid grid-cols-2 gap-5 md:gap-6">
-                    <PrimaryCard className="cursor-default">
-                      <p className="text-xl font-bold text-white">6 Modules</p>
-                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Focused learning paths that keep the journey structured.</p>
-                    </PrimaryCard>
-                    <PrimaryCard className="cursor-default">
-                      <p className="text-xl font-bold text-white">Weekly Challenges</p>
-                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">A cadence that keeps students practicing and shipping.</p>
-                    </PrimaryCard>
-                    <PrimaryCard className="cursor-default">
-                      <p className="text-xl font-bold text-white">Open Source</p>
-                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Built with transparent tooling and room to contribute.</p>
-                    </PrimaryCard>
-                    <PrimaryCard className="cursor-default">
-                      <p className="text-xl font-bold text-white">Student-First</p>
-                      <p className="mt-2 text-xs leading-5 text-white/65 md:text-sm">Designed around peer learning, not passive consumption.</p>
-                    </PrimaryCard>
+              <div
+                ref={cssBoxRef}
+                className="min-h-[1520px] overflow-visible rounded-[1.6rem] bg-black/20 backdrop-blur-sm"
+                style={{
+                  width: "min(calc(100vw - 12rem), 1000px)",
+                  marginLeft: "4rem",
+                  marginRight: "2rem",
+                }}
+              >
+                <div className="relative z-10 h-full w-full px-8 py-4 md:px-12 md:py-6">
+                  <div className="mx-auto h-full w-full max-w-4xl">
+                    <div className="space-y-8 md:space-y-10">
+                      {sectionDescriptions.map((section, index) => (
+                        <section key={section.id} id={section.id} className="section-block scroll-mt-24">
+                          <h3 className="flex items-center gap-2.5 text-xl font-semibold text-cyan-100 md:text-2xl">
+                            <section.Icon className="h-5 w-5 text-cyan-300 md:h-6 md:w-6" />
+                            <span>{section.title}</span>
+                          </h3>
+                          <p
+                            aria-hidden="true"
+                            className="mt-4 select-none text-sm leading-7 text-transparent opacity-0 md:text-base md:leading-8"
+                          >
+                            {section.lines.join(" ")}
+                          </p>
+                          {index < sectionDescriptions.length - 1 ? (
+                            <div className="mt-6 h-px w-full bg-cyan-100/20" aria-hidden="true" />
+                          ) : null}
+                        </section>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </BorderGlow>
-          </section>
+          </div>
         </FadeInSection>
 
         <footer className="mt-10 w-full px-2 pb-4 text-center text-sm text-zinc-300/80 md:text-base">

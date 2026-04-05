@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { BookOpen, Code2, Puzzle, Users, Zap } from "lucide-react";
+import { BookOpen, Code2, Puzzle, Users, Video, Zap } from "lucide-react";
 import BorderGlow from "@/components/effects/BorderGlow";
 
 function cn(...inputs: Array<string | false | null | undefined>) {
@@ -55,13 +55,17 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
       { label: "Puzzle Games", anchor: "#puzzle-games", Icon: Puzzle },
       { label: "Challenges", anchor: "#challenges", Icon: Zap, badge: "7" },
       { label: "Hackathons", anchor: "#hackathons", Icon: Code2, badge: "3" },
+      { label: "Webinars", anchor: "#webinars", Icon: Video },
       { label: "Study Groups", anchor: "#study-groups", Icon: Users, badge: "12" },
-      { label: "About", anchor: "#about", Icon: BookOpen },
+      { label: "About Us", anchor: "#about-us", Icon: BookOpen },
     ],
     []
   );
 
-  const sectionIds = sectionItems.map((item) => item.anchor.replace("#", ""));
+  const sectionIds = useMemo(
+    () => sectionItems.map((item) => item.anchor.replace("#", "")),
+    [sectionItems]
+  );
 
   const sectionHref = (anchor: string) =>
     pathname.startsWith("/main") ? anchor : `/main${anchor}`;
@@ -72,6 +76,24 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
   }, [collapsed]);
 
   useEffect(() => {
+    if (!pathname.startsWith("/main")) return;
+
+    const updateFromHash = () => {
+      const hash = window.location.hash;
+      if (hash && sectionItems.some((item) => item.anchor === hash)) {
+        setActiveAnchor(hash);
+      }
+    };
+
+    updateFromHash();
+    window.addEventListener("hashchange", updateFromHash);
+
+    return () => window.removeEventListener("hashchange", updateFromHash);
+  }, [pathname, sectionItems]);
+
+  useEffect(() => {
+    if (!pathname.startsWith("/main")) return;
+
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((element): element is HTMLElement => Boolean(element));
@@ -89,15 +111,15 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
         }
       },
       {
-        threshold: [0.2, 0.35, 0.5, 0.65],
-        rootMargin: "-12% 0px -55% 0px",
+        threshold: [0.15, 0.3, 0.5, 0.7],
+        rootMargin: "-20% 0px -55% 0px",
       }
     );
 
     elements.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
-  }, [sectionIds]);
+  }, [pathname, sectionIds]);
 
   const navLinkClassName = (anchor: string) =>
     cn(
