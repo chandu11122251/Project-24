@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Code2, Puzzle, Users, Video, Zap } from "lucide-react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
-import ModelWrappedTextCard from "@/components/sections/ModelWrappedTextCard";
-import BorderGlow from "@/components/effects/BorderGlow";
 import StarBorder from "@/components/effects/StarBorder";
-
-function cn(...classes: Array<string | false | null | undefined>) {
-  return classes.filter(Boolean).join(" ");
-}
 
 function FadeInSection({
   children,
@@ -48,11 +41,9 @@ function FadeInSection({
   return (
     <div
       ref={ref}
-      className={cn(
-        "transform-gpu transition-all duration-500",
-        isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
-        className
-      )}
+      className={`transform-gpu transition-all duration-500 ${
+        isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+      } ${className || ""}`}
     >
       {children}
     </div>
@@ -60,131 +51,264 @@ function FadeInSection({
 }
 
 export default function MainPage() {
-  const [underlineReady, setUnderlineReady] = useState(false);
-  const [activateModelAnimation, setActivateModelAnimation] = useState(false);
-  const [modelOverlayWidth, setModelOverlayWidth] = useState(0);
-  const [modelOverlayHeight, setModelOverlayHeight] = useState(0);
-  const cssBoxRef = useRef<HTMLDivElement>(null);
-  const sectionDescriptions = [
-    {
-      id: "puzzle-games",
-      title: "Puzzle Games",
-      Icon: Puzzle,
-      lines: [
-        "Solve bite-sized logic and algorithm puzzles designed for fast, focused practice that fits naturally into your daily schedule.",
-        "Collaborate in timed team rounds where every member contributes hints, reasoning paths, and final solution strategies.",
-        "Improve pattern recognition, communication clarity, and decision speed by revisiting concepts from multiple difficulty levels.",
-        "Track streaks, leaderboard progress, and concept mastery with each completed sprint, then use feedback to improve your next run.",
-        "Build confidence by moving from short warm-up puzzles to deeper challenge sets that mirror real interview and coding scenarios.",
-      ],
-    },
-    {
-      id: "challenges",
-      title: "Challenges",
-      Icon: Zap,
-      lines: [
-        "Take on weekly coding and problem-solving tasks with practical outcomes that strengthen both understanding and execution.",
-        "Submit your approach, receive detailed peer and mentor feedback, and refine how you structure, explain, and optimize your code.",
-        "Focus on consistency, clean thinking, and practical debugging under realistic constraints like time, readability, and edge cases.",
-        "Build momentum through structured milestones that reward progress over perfection and encourage long-term learning habits.",
-        "Use challenge reflections to identify weak areas early and convert them into focused practice goals for the following week.",
-      ],
-    },
-    {
-      id: "hackathons",
-      title: "Hackathons",
-      Icon: Code2,
-      lines: [
-        "Join rapid build sprints where teams turn ideas into working prototypes that solve meaningful student and community problems.",
-        "Work with mentors to define clear scope, split responsibilities effectively, and ship faster without sacrificing core quality.",
-        "Practice pitching, iterative building, and product thinking while strengthening technical execution in a high-energy environment.",
-        "Collaborate across design, frontend, backend, and strategy so every participant learns beyond a single specialized role.",
-        "End each sprint with demos, feedback loops, and clear next steps that help projects move from prototype to polished product.",
-      ],
-    },
-    {
-      id: "webinars",
-      title: "Webinars",
-      Icon: Video,
-      lines: [
-        "Attend live sessions with mentors, seniors, and industry professionals who share practical lessons from real projects.",
-        "Learn across engineering, productivity, communication, and career growth through focused talks with clear examples.",
-        "Take part in interactive Q and A discussions to clarify difficult concepts and understand how experts approach trade-offs.",
-        "Review case studies, workflows, and frameworks that can be directly applied to coursework, side projects, and internships.",
-        "Leave each webinar with actionable next steps you can implement immediately in your preparation and daily learning routine.",
-      ],
-    },
-    {
-      id: "study-groups",
-      title: "Study Groups",
-      Icon: Users,
-      lines: [
-        "Join focused peer circles organized around shared goals, target skills, and structured learning tracks.",
-        "Plan weekly revision sessions, accountability check-ins, and doubt-clearing rounds that keep everyone aligned.",
-        "Strengthen understanding by teaching concepts, reviewing each others solutions, and discussing alternate approaches.",
-        "Build discipline with small weekly commitments that make consistent progress easier and less overwhelming.",
-        "Create a dependable support system where members celebrate wins, solve blockers together, and stay motivated long-term.",
-      ],
-    },
-    {
-      id: "about-us",
-      title: "About Us",
-      Icon: BookOpen,
-      lines: [
-        "Project-24 is a learner-first community where students grow through practice, collaboration, and meaningful contribution.",
-        "Our model blends puzzle solving, challenges, hackathons, webinars, and study groups into one connected growth journey.",
-        "We value clarity, consistency, communication, and teamwork more than one-time performance or isolated results.",
-        "Every section is designed to convert passive study into active, real-world progress through repeatable learning loops.",
-        "The goal is simple: help learners become confident builders who can think clearly, explain well, and support others.",
-      ],
-    },
-  ];
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setUnderlineReady(true));
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+    const stage = stageRef.current;
+    if (!stage) return;
 
-  useEffect(() => {
-    const box = cssBoxRef.current;
-    if (!box) return;
+    // Editorial Engine Implementation
+    const BODY_FONT = '18px "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif';
+    const BODY_LINE_HEIGHT = 30;
+    const HEADLINE_FONT_FAMILY = '"Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, serif';
+    const HEADLINE_TEXT = "THE FUTURE OF TEXT LAYOUT IS NOT CSS";
+    const GUTTER = 48;
+    const COL_GAP = 40;
+    const BOTTOM_GAP = 20;
+    const DROP_CAP_LINES = 3;
+    const MIN_SLOT_WIDTH = 50;
+    const NARROW_BREAKPOINT = 760;
+    const NARROW_GUTTER = 20;
+    const NARROW_COL_GAP = 20;
+    const NARROW_BOTTOM_GAP = 16;
+    const NARROW_ORB_SCALE = 0.58;
+    const NARROW_ACTIVE_ORBS = 3;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setActivateModelAnimation(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.3 }
-    );
+    const BODY_TEXT = `The web renders text through a pipeline that was designed thirty years ago for static documents. A browser loads a font, shapes the text into glyphs, measures their combined width, determines where lines break, and positions each line vertically.
 
-    observer.observe(box);
-    return () => observer.disconnect();
-  }, []);
+Welcome to Project-24, a learner-first community where students grow through practice, collaboration, and meaningful contribution. Our model blends puzzle solving, challenges, hackathons, webinars, and study groups into one connected growth journey.
 
-  useEffect(() => {
-    const box = cssBoxRef.current;
-    if (!box) return;
+We value clarity, consistency, communication, and teamwork more than one-time performance or isolated results. Every section is designed to convert passive study into active, real-world progress through repeatable learning loops.
 
-    const syncOverlayHeight = () => {
-      setModelOverlayWidth(box.getBoundingClientRect().width);
-      setModelOverlayHeight(box.offsetHeight);
+The goal is simple: help learners become confident builders who can think clearly, explain well, and support others. This platform provides structured yet flexible pathways for learning, from beginner-friendly puzzles to advanced technical challenges.
+
+Join us and become part of a community that celebrates learning, supports growth, and builds the next generation of thoughtful engineers and leaders.`;
+
+    const orbDefs = [
+      { fx: 0.52, fy: 0.22, r: 80, vx: 24, vy: 16, color: [196, 163, 90] },
+      { fx: 0.18, fy: 0.48, r: 65, vx: -19, vy: 26, color: [100, 140, 255] },
+      { fx: 0.74, fy: 0.58, r: 75, vx: 16, vy: -21, color: [232, 100, 130] },
+    ];
+
+    const createOrbEl = (color: number[]) => {
+      const element = document.createElement("div");
+      element.className = "orb";
+      element.style.position = "absolute";
+      element.style.borderRadius = "50%";
+      element.style.pointerEvents = "none";
+      element.style.zIndex = "10";
+      element.style.willChange = "transform";
+      element.style.background = `radial-gradient(circle at 35% 35%, rgba(${color[0]},${color[1]},${color[2]},0.35), rgba(${color[0]},${color[1]},${color[2]},0.12) 55%, transparent 72%)`;
+      element.style.boxShadow = `0 0 60px 15px rgba(${color[0]},${color[1]},${color[2]},0.18), 0 0 120px 40px rgba(${color[0]},${color[1]},${color[2]},0.07)`;
+      stage.appendChild(element);
+      return element;
     };
 
-    syncOverlayHeight();
-    const resizeObserver = new ResizeObserver(() => syncOverlayHeight());
-    resizeObserver.observe(box);
+    const W0 = window.innerWidth;
+    const H0 = window.innerHeight;
 
-    return () => resizeObserver.disconnect();
+    const linePool: HTMLElement[] = [];
+    const domCache = {
+      stage,
+      bodyLines: linePool,
+      orbs: orbDefs.map((definition) => createOrbEl(definition.color))
+    };
+
+    const st = {
+      orbs: orbDefs.map((definition) => ({
+        x: definition.fx * W0,
+        y: definition.fy * H0,
+        r: definition.r,
+        vx: definition.vx,
+        vy: definition.vy,
+        paused: false
+      })),
+      pointer: { x: -9999, y: -9999 },
+      drag: null as any,
+      lastFrameTime: null as number | null
+    };
+
+    const syncPool = (pool: HTMLElement[], count: number, create: () => HTMLElement) => {
+      while (pool.length < count) {
+        const element = create();
+        stage.appendChild(element);
+        pool.push(element);
+      }
+      for (let index = 0; index < pool.length; index++) {
+        pool[index].style.display = index < count ? "" : "none";
+      }
+    };
+
+    let scheduledRaf: number | null = null;
+
+    const scheduleRender = () => {
+      if (scheduledRaf !== null) return;
+      scheduledRaf = requestAnimationFrame((now) => {
+        scheduledRaf = null;
+        if (render(now)) scheduleRender();
+      });
+    };
+
+    const hitTestOrbs = (orbs: any[], px: number, py: number, activeCount: number, radiusScale: number) => {
+      for (let index = activeCount - 1; index >= 0; index--) {
+        const orb = orbs[index];
+        const radius = orb.r * radiusScale;
+        const dx = px - orb.x;
+        const dy = py - orb.y;
+        if (dx * dx + dy * dy <= radius * radius) return index;
+      }
+      return -1;
+    };
+
+    const pointerSampleFromEvent = (event: PointerEvent) => ({
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    stage.addEventListener("pointermove", (event) => {
+      st.pointer = pointerSampleFromEvent(event as PointerEvent);
+      scheduleRender();
+    });
+
+    stage.addEventListener("pointerdown", (event) => {
+      const pageWidth = document.documentElement.clientWidth;
+      const isNarrow = pageWidth < NARROW_BREAKPOINT;
+      const orbRadiusScale = isNarrow ? NARROW_ORB_SCALE : 1;
+      const activeOrbCount = isNarrow ? Math.min(NARROW_ACTIVE_ORBS, st.orbs.length) : st.orbs.length;
+      const hitOrbIndex = hitTestOrbs(st.orbs, event.clientX, event.clientY, activeOrbCount, orbRadiusScale);
+      if (hitOrbIndex !== -1) {
+        st.drag = {
+          orbIndex: hitOrbIndex,
+          startPointerX: event.clientX,
+          startPointerY: event.clientY,
+          startOrbX: st.orbs[hitOrbIndex].x,
+          startOrbY: st.orbs[hitOrbIndex].y,
+        };
+        scheduleRender();
+      }
+    });
+
+    stage.addEventListener("pointerup", (event) => {
+      if (st.drag !== null) {
+        const dx = event.clientX - st.drag.startPointerX;
+        const dy = event.clientY - st.drag.startPointerY;
+        const orb = st.orbs[st.drag.orbIndex];
+        if (dx * dx + dy * dy < 16) {
+          orb.paused = !orb.paused;
+        }
+        st.drag = null;
+        scheduleRender();
+      }
+    });
+
+    window.addEventListener("resize", () => scheduleRender());
+
+    const render = (now: number) => {
+      const pageWidth = document.documentElement.clientWidth;
+      const pageHeight = document.documentElement.clientHeight;
+      const isNarrow = pageWidth < NARROW_BREAKPOINT;
+      const orbRadiusScale = isNarrow ? NARROW_ORB_SCALE : 1;
+      const activeOrbCount = isNarrow ? Math.min(NARROW_ACTIVE_ORBS, st.orbs.length) : st.orbs.length;
+      const orbs = st.orbs;
+
+      const lastFrameTime = st.lastFrameTime ?? now;
+      const dt = Math.min((now - lastFrameTime) / 1000, 0.05);
+      let stillAnimating = false;
+
+      for (let index = 0; index < orbs.length; index++) {
+        if (index >= activeOrbCount) continue;
+        const orb = orbs[index];
+        const radius = orb.r * orbRadiusScale;
+        if (orb.paused || (st.drag && st.drag.orbIndex === index)) continue;
+        stillAnimating = true;
+        orb.x += orb.vx * dt;
+        orb.y += orb.vy * dt;
+        if (orb.x - radius < 0) {
+          orb.x = radius;
+          orb.vx = Math.abs(orb.vx);
+        }
+        if (orb.x + radius > pageWidth) {
+          orb.x = pageWidth - radius;
+          orb.vx = -Math.abs(orb.vx);
+        }
+        if (orb.y - radius < (isNarrow ? NARROW_GUTTER : GUTTER) * 0.5) {
+          orb.y = radius + (isNarrow ? NARROW_GUTTER : GUTTER) * 0.5;
+          orb.vy = Math.abs(orb.vy);
+        }
+        if (orb.y + radius > pageHeight - (isNarrow ? NARROW_BOTTOM_GAP : BOTTOM_GAP)) {
+          orb.y = pageHeight - (isNarrow ? NARROW_BOTTOM_GAP : BOTTOM_GAP) - radius;
+          orb.vy = -Math.abs(orb.vy);
+        }
+      }
+
+      for (let index = 0; index < activeOrbCount; index++) {
+        const a = orbs[index];
+        const aRadius = a.r * orbRadiusScale;
+        for (let otherIndex = index + 1; otherIndex < activeOrbCount; otherIndex++) {
+          const b = orbs[otherIndex];
+          const bRadius = b.r * orbRadiusScale;
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const minDist = aRadius + bRadius + (isNarrow ? 12 : 20);
+          if (dist >= minDist || dist <= 0.1) continue;
+          const force = (minDist - dist) * 0.8;
+          const nx = dx / dist;
+          const ny = dy / dist;
+          if (!a.paused && (!st.drag || st.drag.orbIndex !== index)) {
+            a.vx -= nx * force * dt;
+            a.vy -= ny * force * dt;
+          }
+          if (!b.paused && (!st.drag || st.drag.orbIndex !== otherIndex)) {
+            b.vx += nx * force * dt;
+            b.vy += ny * force * dt;
+          }
+        }
+      }
+
+      syncPool(domCache.bodyLines, 0, () => {
+        const element = document.createElement("span");
+        element.className = "line";
+        element.style.position = "absolute";
+        element.style.whiteSpace = "pre";
+        element.style.zIndex = "1";
+        element.style.color = "#e8e4dc";
+        element.style.userSelect = "text";
+        return element;
+      });
+
+      for (let index = 0; index < orbs.length; index++) {
+        const orb = orbs[index];
+        const element = domCache.orbs[index];
+        if (index >= activeOrbCount) {
+          element.style.display = "none";
+          continue;
+        }
+        const radius = orb.r * orbRadiusScale;
+        element.style.display = "";
+        element.style.left = `${orb.x - radius}px`;
+        element.style.top = `${orb.y - radius}px`;
+        element.style.width = `${radius * 2}px`;
+        element.style.height = `${radius * 2}px`;
+        element.style.opacity = orb.paused ? "0.45" : "1";
+      }
+
+      st.lastFrameTime = stillAnimating ? now : null;
+      return stillAnimating;
+    };
+
+    scheduleRender();
+
+    return () => {
+      if (scheduledRaf !== null) {
+        cancelAnimationFrame(scheduledRaf);
+      }
+    };
   }, []);
 
   return (
-    <StarfieldBackground className="relative min-h-screen w-full overflow-x-hidden overflow-y-auto bg-[#06070f] px-4 py-4 text-white md:px-6 md:py-6">
-      <Link
-        href="/login"
-        className="group fixed right-4 top-4 z-50"
-      >
+    <StarfieldBackground className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
+      <Link href="/login" className="group fixed right-4 top-4 z-50">
         <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
           <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
             <span className="group-hover:hidden">Sign In/Sign Up</span>
@@ -193,95 +317,36 @@ export default function MainPage() {
         </StarBorder>
       </Link>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-none flex-col gap-10 pb-14 md:gap-14">
-        <FadeInSection>
-          <section
-            id="hero"
-            className="relative flex min-h-[100svh] scroll-mt-10 flex-col items-center justify-center overflow-hidden px-5 py-8 md:px-10 md:py-12"
-          >
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 z-0 pointer-events-none"
-              style={{
-                backgroundImage:
-                  "radial-gradient(circle, rgba(103,232,249,0.04) 1px, transparent 1px)",
-                backgroundSize: "32px 32px",
-              }}
-            />
-            <div className="relative z-10 flex w-full items-center justify-center">
-              <h1 className="text-center bg-gradient-to-br from-white via-cyan-200 to-cyan-400 bg-clip-text text-6xl font-black leading-[0.92] tracking-[-0.06em] text-transparent drop-shadow-[0_0_40px_rgba(103,232,249,0.35)] sm:text-7xl md:text-[7.5rem] lg:text-[9rem]">
-                Project -24
-              </h1>
-            </div>
-            <div className="relative z-10 mt-6 h-[2px] w-[120px] origin-left rounded-full bg-cyan-300/80 transition-transform duration-[800ms] ease-out" style={{ transform: underlineReady ? "scaleX(1)" : "scaleX(0)" }} />
-          </section>
-        </FadeInSection>
-
-        <FadeInSection className="flex justify-center px-2">
-          <div className="relative inline-block">
-            <div
-              className="pointer-events-none absolute -left-14 -top-28 z-30"
-              style={{
-                width: modelOverlayWidth > 0 ? `${modelOverlayWidth + 56}px` : undefined,
-                height: modelOverlayHeight > 0 ? `${modelOverlayHeight + 112}px` : undefined,
-              }}
-            >
-              <ModelWrappedTextCard targetRef={cssBoxRef} animateOnView={activateModelAnimation} />
-            </div>
-
-            <BorderGlow
-              edgeSensitivity={30}
-              glowColor="40 80 80"
-              backgroundColor="#060010"
-              borderRadius={26}
-              glowRadius={30}
-              glowIntensity={0.75}
-              coneSpread={24}
-              animated={false}
-              colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
-            >
-              <div
-                ref={cssBoxRef}
-                className="min-h-[1520px] overflow-visible rounded-[1.6rem] bg-black/20 backdrop-blur-sm"
-                style={{
-                  width: "min(calc(100vw - 12rem), 1000px)",
-                  marginLeft: "4rem",
-                  marginRight: "2rem",
-                }}
-              >
-                <div className="relative z-10 h-full w-full px-8 py-4 md:px-12 md:py-6">
-                  <div className="mx-auto h-full w-full max-w-4xl">
-                    <div className="space-y-8 md:space-y-10">
-                      {sectionDescriptions.map((section, index) => (
-                        <section key={section.id} id={section.id} className="section-block scroll-mt-24">
-                          <h3 className="flex items-center gap-2.5 text-xl font-semibold text-cyan-100 md:text-2xl">
-                            <section.Icon className="h-5 w-5 text-cyan-300 md:h-6 md:w-6" />
-                            <span>{section.title}</span>
-                          </h3>
-                          <p
-                            aria-hidden="true"
-                            className="mt-4 select-none text-sm leading-7 text-transparent opacity-0 md:text-base md:leading-8"
-                          >
-                            {section.lines.join(" ")}
-                          </p>
-                          {index < sectionDescriptions.length - 1 ? (
-                            <div className="mt-6 h-px w-full bg-cyan-100/20" aria-hidden="true" />
-                          ) : null}
-                        </section>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </BorderGlow>
-          </div>
-        </FadeInSection>
-
-        <footer className="mt-10 w-full px-2 pb-4 text-center text-sm text-zinc-300/80 md:text-base">
-          <div className="mb-4 h-px w-full bg-white/20" />
-          <p className="backdrop-blur-[2px] text-zinc-300/75">© 2026 Project-24. All rights reserved.</p>
-        </footer>
-      </main>
+      <div
+        ref={stageRef}
+        id="stage"
+        style={{
+          position: "relative",
+          width: "100vw",
+          height: "100vh",
+          overflow: "hidden",
+          background: "radial-gradient(ellipse at 50% 40%, #0f0f14 0%, #0a0a0c 100%)",
+        }}
+      >
+        <div
+          style={{
+            position: "fixed",
+            top: "16px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            font: '400 13px/1 "Helvetica Neue", Helvetica, Arial, sans-serif',
+            color: "rgba(255,255,255,0.22)",
+            zIndex: 100,
+            background: "rgba(0,0,0,0.45)",
+            padding: "8px 18px",
+            borderRadius: "999px",
+            pointerEvents: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Drag the orbs · Click to pause · Zero DOM reads
+        </div>
+      </div>
     </StarfieldBackground>
   );
 }

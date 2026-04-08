@@ -149,3 +149,87 @@
     padding-left: 3.375rem;
   }
 }
+
+/* Editorial Engine Styles */
+#stage {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+    Palatino, serif;
+  font-size: 18px;
+  line-height: 30px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+#stage .line {
+  font-kerning: auto;
+  font-feature-settings: "kern" 1, "liga" 1;
+}
+
+#stage .headline-line {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua",
+    Palatino, serif;
+  font-size: 56px;
+  line-height: 68px;
+  font-weight: 700;
+  color: #e8e4dc;
+}
+
+#stage .drop-cap {
+  float: left;
+  font-size: 80px;
+  line-height: 60px;
+  padding-top: 8px;
+  padding-right: 8px;
+  font-weight: 700;
+  color: #c4a35a;
+}
+
+#stage .orb {
+  cursor: grab;
+  transition: opacity 0.2s ease;
+}
+
+#stage .orb:hover {
+  opacity: 1 !important;
+  cursor: grab;
+}
+
+#stage .orb:active {
+  cursor: grabbing;
+}
+
+#stage .pullquote-box {
+  position: absolute;
+  pointer-events: none;
+  color: #a89968;
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+  width: 180px;
+  font-size: 15px;
+  line-height: 24px;
+}
+
+@media (max-width: 760px) {
+  #stage {
+    font-size: 16px;
+    line-height: 26px;
+  }
+
+  #stage .headline-line {
+    font-size: 36px;
+    line-height: 44px;
+  }
+
+  #stage .drop-cap {
+    font-size: 52px;
+    line-height: 40px;
+  }
+
+  #stage .pullquote-box {
+    width: 140px;
+    font-size: 14px;
+    line-height: 22px;
+  }
+}
