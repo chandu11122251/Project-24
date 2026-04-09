@@ -131,3 +131,18 @@
   overflow: visible;
   z-index: 1;
 }
+
+.border-glow-card.border-glow-static::before,
+.border-glow-card.border-glow-static::after,
+.border-glow-card.border-glow-static > .edge-light {
+  display: none;
+}
+
+.border-glow-card.border-glow-static {
+  border: 1px solid rgb(103 232 249 / 22%);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 6%),
+    0 0 0 1px rgb(14 165 233 / 16%),
+    0 8px 24px rgb(0 0 0 / 28%),
+    0 0 28px rgb(56 189 248 / 18%);
+}

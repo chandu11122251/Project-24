@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #06070f;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  font-family: 'Iowan Old Style','Palatino Linotype','Book Antiqua',Palatino,serif;
+}
+.card {
+  position: relative;
+  width: min(860px, calc(100vw - 32px));
+  height: auto;
+  background: radial-gradient(ellipse at 52% 38%, #0a111f 0%, #080d18 55%, #070910 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+#stage {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* Structured content layer */
+#layout {
+  position: relative;
+  z-index: 10;
+  padding: 36px 48px 48px;
+  pointer-events: auto;
+}
+/* Masthead — never wraps */
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.13);
+  margin-bottom: 36px;
+}
+.masthead-title {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase; color: #c4a35a;
+}
+.masthead-tagline {
+  font-size: 11px; color: rgba(255,255,255,0.3);
+  font-style: italic; letter-spacing: 0.03em;
+}
+.masthead-spacer { flex: 1; }
+.orb-toggle-btn {
+  appearance: none;
+  border: 1px solid rgba(103,232,249,0.35);
+  background: rgba(8, 68, 68, 0.38);
+  color: #bdf6ff;
+  border-radius: 999px;
+  padding: 5px 12px;
+  font: 700 10px/1.2 Helvetica, Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+.orb-toggle-btn:hover {
+  background: rgba(13, 110, 110, 0.45);
+  border-color: rgba(103,232,249,0.65);
+}
+.orb-toggle-btn[aria-pressed="true"] {
+  background: rgba(196,163,90,0.22);
+  border-color: rgba(196,163,90,0.6);
+  color: #f5ddb2;
+}
+/* Section heading — never wraps */
+.section-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  /* solid background so orbs behind don't show through gap */
+}
+.section-badge {
+  width: 26px; height: 26px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; flex-shrink: 0;
+}
+.section-badge svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.section-meta { display: flex; flex-direction: column; gap: 2px; }
+.section-track {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.15em;
+  text-transform: uppercase; color: rgba(255,255,255,0.25);
+}
+.section-title {
+  font-size: 22px; font-weight: 700; color: #ffffff;
+  letter-spacing: -0.3px; line-height: 1.15;
+}
+/* Objective pill — never wraps */
+.objective-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+/* Description area: canvas-drawn text lives here */
+.desc-canvas-wrap {
+  margin-bottom: 4px;
+  position: relative;
+}
+.desc-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+}
+/* Para label above each body block — rendered inside canvas wrap */
+.para-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.12em;
+  text-transform: uppercase; color: rgba(255,255,255,0.35);
+  margin-top: 12px; margin-bottom: 4px;
+}
+/* Divider — never wraps */
+.section-divider {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 20px; margin-bottom: 28px;
+}
+.divider-line { flex: 1; height: 1px; background: rgba(255,255,255,0.09); }
+.divider-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(255,255,255,0.18); flex-shrink: 0;
+}
+/* Quote block */
+.quote-block {
+  background: rgba(196,163,90,0.06);
+  border: 1px solid rgba(196,163,90,0.18);
+  border-radius: 8px; padding: 14px 16px; margin-top: 14px;
+}
+.quote-text {
+  font-size: 13.5px; color: rgba(196,163,90,0.85);
+  line-height: 1.7; font-style: italic;
+}
+.footer-hint {
+  text-align: center;
+  font: 400 11px/1 Helvetica, Arial, sans-serif;
+  color: rgba(255,255,255,0.15); letter-spacing: 0.04em;
+  padding-top: 8px;
+}
+.content-section {
+  scroll-margin-top: 24px;
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="stage">
+    <div id="orb0" class="orb"></div>
+    <div id="orb1" class="orb"></div>
+    <div id="orb2" class="orb"></div>
+    <div id="orb3" class="orb"></div>
+    <div id="orb4" class="orb"></div>
+  </div>
+
+  <div id="layout">
+    <div class="masthead">
+      <span class="masthead-title">Project‑24</span>
+      <span class="masthead-tagline">A learner‑first engineering community</span>
+      <span class="masthead-spacer"></span>
+      <button id="orbToggle" class="orb-toggle-btn" type="button" aria-pressed="false" aria-label="Pause moving orbs">Pause Orbs</button>
+    </div>
+
+    <!-- S1 -->
+    <section id="puzzle-games" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(196,163,90,0.15);color:#c4a35a;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"></path></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Track 01</span>
+        <span class="section-title">Puzzle Games</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(196,163,90,0.1);color:#c4a35a;">Objective — Cognitive Agility &amp; Logic Hardening</div>
+    <div class="desc-canvas-wrap" id="desc0"></div>
+    <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+    </section>
+
+    <!-- S2 -->
+    <section id="challenges" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(100,140,255,0.15);color:#6490ff;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Track 02</span>
+        <span class="section-title">Challenges</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(100,140,255,0.1);color:#6490ff;">Objective — Architectural Integrity &amp; Craftsmanship</div>
+    <div class="desc-canvas-wrap" id="desc1"></div>
+    <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+    </section>
+
+    <!-- S3 -->
+    <section id="hackathons" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(232,100,130,0.15);color:#e86482;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 18 22 12 16 6"></path><path d="M8 6 2 12l6 6"></path></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Track 03</span>
+        <span class="section-title">Hackathons</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(232,100,130,0.1);color:#e86482;">Objective — Velocity &amp; Radical Collaboration</div>
+    <div class="desc-canvas-wrap" id="desc2"></div>
+    <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+    </section>
+
+    <!-- S4 -->
+    <section id="webinars" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(80,200,140,0.15);color:#50c88c;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 8-6 4 6 4V8Z"></path><rect x="2" y="6" width="14" height="12" rx="2"></rect></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Track 04</span>
+        <span class="section-title">Webinars</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(80,200,140,0.1);color:#50c88c;">Objective — Wisdom Compression &amp; Mental Models</div>
+    <div class="desc-canvas-wrap" id="desc3"></div>
+    <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+    </section>
+
+    <!-- S5 -->
+    <section id="study-groups" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(150,100,220,0.15);color:#9664dc;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><path d="M20 8v6"></path><path d="M23 11h-6"></path></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Track 05</span>
+        <span class="section-title">Study Groups</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(150,100,220,0.1);color:#9664dc;">Objective — Knowledge Solidification &amp; Peer Feedback</div>
+    <div class="desc-canvas-wrap" id="desc4"></div>
+    <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
+    </section>
+
+    <!-- S6 -->
+    <section id="about-us" class="content-section">
+    <div class="section-heading">
+      <div class="section-badge" style="background:rgba(196,163,90,0.12);color:#c4a35a;">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+      </div>
+      <div class="section-meta">
+        <span class="section-track">Manifesto</span>
+        <span class="section-title">About Project‑24</span>
+      </div>
+    </div>
+    <div class="objective-pill" style="background:rgba(196,163,90,0.1);color:#c4a35a;">Philosophy — Growth Through Doing</div>
+    <div class="desc-canvas-wrap" id="desc5"></div>
+    <div class="quote-block"><p class="quote-text">"The ability to explain, to ask the right questions, and to support others through difficulty — that is what we train for."</p></div>
+    </section>
+
+    <div style="height:24px"></div>
+    <div class="footer-hint">Orbs start paused for reading · Use Resume Orbs to animate</div>
+  </div>
+</div>
+
+<script>
+// ─── Orb physics ──────────────────────────────────────────────────────────────
+const orbDefs = [
+  // Parked near side gutters so body copy keeps paragraph-like continuity.
+  {fx:0.90,fy:0.10,r:44, vx:10, vy:8,  color:[196,163,90]},
+  {fx:0.08,fy:0.28,r:38, vx:-8, vy:11, color:[100,140,255]},
+  {fx:0.92,fy:0.46,r:42, vx:9,  vy:-10,color:[232,100,130]},
+  {fx:0.09,fy:0.66,r:36, vx:-10,vy:-8, color:[80,200,140]},
+  {fx:0.89,fy:0.84,r:34, vx:-7, vy:9,  color:[150,100,220]},
+];
+
+const card  = document.querySelector('.card');
+const stage = document.getElementById('stage');
+
+const orbEls = orbDefs.map((d,i)=>{
+  const el = document.getElementById('orb'+i);
+  el.style.background=`radial-gradient(circle at 35% 35%, rgba(${d.color},0.32), rgba(${d.color},0.10) 55%, transparent 72%)`;
+  el.style.boxShadow =`0 0 70px 18px rgba(${d.color},0.16), 0 0 130px 45px rgba(${d.color},0.06)`;
+  return el;
+});
+
+function CW(){ return card.offsetWidth; }
+function CH(){ return card.offsetHeight(); }
+
+const orbs = orbDefs.map(d=>({
+  x:d.fx*CW(), y:d.fy*(card.offsetHeight||1600),
+  r:d.r, vx:d.vx, vy:d.vy, paused:false
+}));
+
+let drag=null,lastT=null,raf=null,downEvt=null,upEvt=null;
+let allOrbsPaused=false;
+const orbToggleBtn = document.getElementById('orbToggle');
+
+function syncOrbToggleLabel(){
+  if(!orbToggleBtn) return;
+  orbToggleBtn.textContent = allOrbsPaused ? 'Resume Orbs' : 'Pause Orbs';
+  orbToggleBtn.setAttribute('aria-pressed', allOrbsPaused ? 'true' : 'false');
+  orbToggleBtn.setAttribute('aria-label', allOrbsPaused ? 'Resume moving orbs' : 'Pause moving orbs');
+}
+
+function setAllOrbsPaused(paused){
+  allOrbsPaused=paused;
+  for(const orb of orbs) orb.paused=paused;
+  syncOrbToggleLabel();
+  sched();
+}
+
+if(orbToggleBtn){
+  orbToggleBtn.addEventListener('click',()=>{
+    setAllOrbsPaused(!allOrbsPaused);
+  });
+}
+setAllOrbsPaused(true);
+syncOrbToggleLabel();
+
+function hitOrb(px,py){
+  for(let i=orbs.length-1;i>=0;i--){
+    const o=orbs[i],dx=px-o.x,dy=py-o.y;
+    if(dx*dx+dy*dy<=o.r*o.r) return i;
+  }
+  return -1;
+}
+
+card.addEventListener('pointerdown',e=>{
+  const r=card.getBoundingClientRect();
+  downEvt={lx:e.clientX-r.left,ly:e.clientY-r.top,cx:e.clientX,cy:e.clientY};
+  sched();
+});
+window.addEventListener('pointermove',e=>{
+  if(!drag) return;
+  orbs[drag.idx].x=drag.ox+(e.clientX-drag.sx);
+  orbs[drag.idx].y=drag.oy+(e.clientY-drag.sy);
+  sched();
+});
+window.addEventListener('pointerup',e=>{upEvt={cx:e.clientX,cy:e.clientY};sched();});
+
+function sched(){if(!raf)raf=requestAnimationFrame(tick);}
+
+function tick(now){
+  raf=null;
+  const W=card.offsetWidth, H=card.offsetHeight, G=30;
+
+  if(downEvt){
+    const idx=hitOrb(downEvt.lx,downEvt.ly);
+    if(idx!==-1) drag={idx,sx:downEvt.cx,sy:downEvt.cy,ox:orbs[idx].x,oy:orbs[idx].y};
+    downEvt=null;
+  }
+  if(upEvt){
+    if(drag){
+      const dx=upEvt.cx-drag.sx,dy=upEvt.cy-drag.sy;
+      if(dx*dx+dy*dy<16) orbs[drag.idx].paused=!orbs[drag.idx].paused;
+      allOrbsPaused = orbs.every(o=>o.paused);
+      syncOrbToggleLabel();
+      drag=null;
+    }
+    upEvt=null;
+  }
+
+  const dt=lastT?Math.min((now-lastT)/1000,0.05):0.016; lastT=now;
+  let moving=false;
+
+  for(let i=0;i<orbs.length;i++){
+    const o=orbs[i];
+    if(o.paused||(drag&&drag.idx===i)) continue;
+    moving=true;
+    o.x+=o.vx*dt; o.y+=o.vy*dt;
+    if(o.x-o.r<0)    {o.x=o.r;   o.vx= Math.abs(o.vx);}
+    if(o.x+o.r>W)    {o.x=W-o.r; o.vx=-Math.abs(o.vx);}
+    if(o.y-o.r<G)    {o.y=o.r+G; o.vy= Math.abs(o.vy);}
+    if(o.y+o.r>H-G)  {o.y=H-G-o.r; o.vy=-Math.abs(o.vy);}
+  }
+  for(let i=0;i<orbs.length;i++){
+    for(let j=i+1;j<orbs.length;j++){
+      const a=orbs[i],b=orbs[j];
+      const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),minD=a.r+b.r+20;
+      if(dist<minD&&dist>0.1){
+        const f=(minD-dist)*0.8,nx=dx/dist,ny=dy/dist;
+        if(!a.paused&&!(drag&&drag.idx===i)){a.vx-=nx*f*dt;a.vy-=ny*f*dt;}
+        if(!b.paused&&!(drag&&drag.idx===j)){b.vx+=nx*f*dt;b.vy+=ny*f*dt;}
+      }
+    }
+  }
+
+  for(let i=0;i<orbs.length;i++){
+    const o=orbs[i],el=orbEls[i];
+    el.style.left=(o.x-o.r)+'px'; el.style.top=(o.y-o.r)+'px';
+    el.style.width=(o.r*2)+'px';  el.style.height=(o.r*2)+'px';
+    el.style.opacity=o.paused?'0.4':'1';
+  }
+
+  layoutDescriptions();
+  if(moving||drag) sched();
+}
+
+// ─── Description text data ────────────────────────────────────────────────────
+const SECTIONS = [
+  {
+    id:'desc0',
+    paras:[
+      {label:'What they are', text:"These aren't just brain teasers — they are diagnostic tools for your thought process. By engaging with high-signal logic puzzles, you train your brain to identify primitive patterns, the underlying structures that recur in complex systems."},
+      {label:'The workflow',   text:"You move from initial confusion to First Principles thinking, stripping away noise until only the core problem remains. Each puzzle is a rehearsal for the real thing."},
+      {label:'The result',     text:"You develop the calm execution necessary to debug critical production errors or navigate high-stakes interviews without panic. Consistency beats intensity every time."},
+    ]
+  },
+  {
+    id:'desc1',
+    paras:[
+      {label:'The focus',  text:"While puzzles focus on logic, challenges focus on durability. This is where you transition from code that works to code that lasts — handling input validation, error boundaries, and state management."},
+      {label:'The review', text:"By comparing your solution to others, you see the trade-offs between design patterns, refining your intuition for clean architecture."},
+    ]
+  },
+  {
+    id:'desc2',
+    paras:[
+      {label:'Execution over perfection', text:"Hackathons serve as a stress test for your soft and hard skills simultaneously. You learn the Pareto Principle of coding — identifying the 20% of features that provide 80% of the value."},
+      {label:'Team dynamics',             text:"You master the art of the clean hand-off, ensuring your module integrates seamlessly with a teammate's work under a ticking clock."},
+    ]
+  },
+  {
+    id:'desc3',
+    paras:[
+      {label:'Strategic growth', text:"Webinars bridge the gap between theory and the tribal knowledge of the industry. Instead of just learning how to use a tool, you learn why it was chosen over alternatives."},
+      {label:'Mindset shift',    text:"These sessions focus on non-linear aspects of engineering — how to communicate technical debt to stakeholders or how to prioritise a product roadmap."},
+    ]
+  },
+  {
+    id:'desc4',
+    paras:[
+      {label:'The Feynman technique',  text:"Study groups use the principle that you don't truly understand a concept until you can teach it. Peer cohorts provide a safety net for questions, patching holes before they become foundational flaws."},
+      {label:'Social accountability',  text:"The rhythm of a group prevents burnout and stagnation, turning the solitary act of learning into a shared mission that builds durable confidence."},
+    ]
+  },
+  {
+    id:'desc5',
+    paras:[
+      {label:'Our model',    text:"Project-24 blends puzzle solving, timed challenges, team hackathons, expert webinars, and peer study groups into one connected journey. Learners do not just consume content here — they contribute, compete, collaborate, and build things that matter."},
+      {label:'What we value',text:"Clarity over cleverness. Consistency over intensity. Communication over isolated performance. The skills that separate great engineers from good ones are rarely technical."},
+    ]
+  },
+];
+
+// ─── Canvas-based wrapping layout ────────────────────────────────────────────
+const BODY_FONT   = '14px "Iowan Old Style","Palatino Linotype","Book Antiqua",Palatino,serif';
+const LABEL_FONT  = '700 9.5px Helvetica,Arial,sans-serif';
+const LINE_H      = 24;
+const LABEL_H     = 20;
+const HPAD        = 12; // horizontal clearance around orb
+const VPAD        = 4;  // vertical clearance
+
+let measureCtx = null;
+function getMeasureCtx(){
+  if(measureCtx) return measureCtx;
+  const c=document.createElement('canvas');
+  measureCtx=c.getContext('2d');
+  return measureCtx;
+}
+
+function measureText(text, font){
+  const ctx=getMeasureCtx(); ctx.font=font;
+  return ctx.measureText(text).width;
+}
+
+// Returns list of {text,x,y,w} positioned line spans + total height
+function flowText(text, font, lineH, regionX, regionW, regionY, obstacles){
+  const ctx=getMeasureCtx(); ctx.font=font;
+  // simple word-wrap with per-line slot carving
+  const words=text.split(' ');
+  const lines=[];
+  let curLine='', y=regionY;
+
+  function slotsForBand(bandY){
+    // band = [bandY, bandY+lineH]
+    let slots=[{l:regionX,r:regionX+regionW}];
+    for(const obs of obstacles){
+      const oy=obs.y, oh=obs.h, ox=obs.x, ow=obs.w;
+      if(bandY+lineH<=oy||bandY>=oy+oh) continue;
+      const next=[];
+      for(const s of slots){
+        const il=Math.max(s.l,ox-HPAD), ir=Math.min(s.r,ox+ow+HPAD);
+        if(il>=ir){next.push(s);continue;}
+        if(s.l<il-4) next.push({l:s.l,r:il});
+        if(ir<s.r-4) next.push({l:ir,r:s.r});
+      }
+      slots=next;
+    }
+    return slots.filter(s=>s.r-s.l>40);
+  }
+
+  let wordIdx=0;
+  while(wordIdx<words.length){
+    const slots=slotsForBand(y);
+    if(slots.length===0){y+=lineH;continue;}
+    // fill slots left-to-right
+    for(const slot of slots){
+      const slotW=slot.r-slot.l;
+      let line='';
+      while(wordIdx<words.length){
+        const trial=(line?line+' ':'')+words[wordIdx];
+        if(measureText(trial,font)<=slotW){
+          line=trial; wordIdx++;
+        } else {
+          // word alone wider than slot? force it
+          if(!line){ line=words[wordIdx]; wordIdx++; }
+          break;
+        }
+      }
+      if(line) lines.push({text:line,x:slot.l,y,w:measureText(line,font)});
+      if(wordIdx>=words.length) break;
+    }
+    y+=lineH;
+  }
+  return {lines, height: y-regionY};
+}
+
+// Build obstacle list for a desc block: orbs that overlap the block's region
+function getObstaclesForBlock(blockEl){
+  const cardRect=card.getBoundingClientRect();
+  const elRect  =blockEl.getBoundingClientRect();
+  const elTop   =elRect.top -cardRect.top;
+  const elLeft  =elRect.left-cardRect.left;
+  const elW     =elRect.width;
+
+  const obs=[];
+  for(const o of orbs){
+    // orb rect in card coords
+    obs.push({
+      x: o.x-o.r-HPAD,
+      y: o.y-o.r-VPAD - elTop,  // relative to block top
+      w: (o.r+HPAD)*2,
+      h: (o.r+VPAD)*2,
+      cx:o.x, cy:o.y-elTop, r:o.r
+    });
+  }
+  return {obs, elTop, elLeft, elW};
+}
+
+// Render one desc block onto a canvas
+function renderDesc(sec){
+  const wrap=document.getElementById(sec.id);
+  if(!wrap) return;
+
+  const {obs,elTop,elLeft,elW}=getObstaclesForBlock(wrap);
+  const regionX=0, regionW=elW;
+
+  // First pass: measure total height
+  let y=0;
+  const allLines=[];
+
+  for(const para of sec.paras){
+    // label row (never wraps, full width)
+    allLines.push({type:'label', text:para.label, x:0, y, w:regionW});
+    y+=LABEL_H;
+
+    // body rows with orb wrapping
+    const result=flowText(para.text, BODY_FONT, LINE_H, regionX, regionW, y, obs.map(o=>({...o,y:o.y})));
+    for(const l of result.lines) allLines.push({type:'body',...l});
+    y+=result.height+6;
+  }
+
+  const totalH=y;
+
+  // Get or create canvas
+  let canvas=wrap.querySelector('canvas');
+  if(!canvas){
+    canvas=document.createElement('canvas');
+    wrap.appendChild(canvas);
+  }
+
+  const dpr=window.devicePixelRatio||1;
+  const cssW=elW, cssH=totalH;
+  canvas.style.width =cssW+'px';
+  canvas.style.height=cssH+'px';
+  wrap.style.height  =cssH+'px';
+  canvas.width =Math.round(cssW*dpr);
+  canvas.height=Math.round(cssH*dpr);
+
+  const ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,cssW,cssH);
+
+  for(const line of allLines){
+    if(line.type==='label'){
+      ctx.font=LABEL_FONT;
+      ctx.fillStyle='rgba(255,255,255,0.35)';
+      ctx.letterSpacing='0.12em';
+      ctx.fillText(line.text.toUpperCase(), line.x, line.y+13);
+      ctx.letterSpacing='0px';
+    } else {
+      ctx.font=BODY_FONT;
+      ctx.fillStyle='rgba(232,228,220,0.78)';
+      ctx.fillText(line.text, line.x, line.y+LINE_H-6);
+    }
+  }
+}
+
+function layoutDescriptions(){
+  for(const sec of SECTIONS) renderDesc(sec);
+}
+
+// Wait for fonts then start
+document.fonts.ready.then(()=>{ sched(); });
+
+// ─── Parent sidebar -> section navigation bridge ─────────────────────────────
+const SECTION_IDS = new Set([
+  'puzzle-games',
+  'challenges',
+  'hackathons',
+  'webinars',
+  'study-groups',
+  'about-us',
+]);
+
+function scrollToSection(sectionId, behavior = 'smooth') {
+  if (!SECTION_IDS.has(sectionId)) return;
+  const el = document.getElementById(sectionId);
+  if (!el) return;
+  el.scrollIntoView({ behavior, block: 'start' });
+}
+
+window.addEventListener('message', (event) => {
+  const data = event.data;
+  if (!data || data.type !== 'project24-scroll-to') return;
+  const sectionId = typeof data.sectionId === 'string' ? data.sectionId : '';
+  if (!sectionId) return;
+  scrollToSection(sectionId, 'smooth');
+});
+</script>
+</body>
+</html>

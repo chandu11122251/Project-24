@@ -94,6 +94,25 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
   useEffect(() => {
     if (!pathname.startsWith("/main")) return;
 
+    const updateFromMainScroll = (event: Event) => {
+      const customEvent = event as CustomEvent<{ sectionId?: string }>;
+      const sectionId = customEvent.detail?.sectionId;
+      if (!sectionId) return;
+
+      const anchor = `#${sectionId}`;
+      if (!sectionItems.some((item) => item.anchor === anchor)) return;
+      setActiveAnchor(anchor);
+    };
+
+    window.addEventListener("project24-active-section", updateFromMainScroll as EventListener);
+    return () => {
+      window.removeEventListener("project24-active-section", updateFromMainScroll as EventListener);
+    };
+  }, [pathname, sectionItems]);
+
+  useEffect(() => {
+    if (!pathname.startsWith("/main")) return;
+
     const elements = sectionIds
       .map((id) => document.getElementById(id))
       .filter((element): element is HTMLElement => Boolean(element));

@@ -87,6 +87,7 @@ type BorderGlowProps = {
   animated?: boolean;
   colors?: string[];
   fillOpacity?: number;
+  performanceMode?: "interactive" | "static";
 };
 
 export default function BorderGlow({
@@ -102,6 +103,7 @@ export default function BorderGlow({
   animated = false,
   colors = ["#c084fc", "#f472b6", "#38bdf8"],
   fillOpacity = 0.5,
+  performanceMode = "interactive",
 }: BorderGlowProps) {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -140,6 +142,7 @@ export default function BorderGlow({
 
   const handlePointerMove = useCallback(
     (e: PointerEvent<HTMLDivElement>) => {
+      if (performanceMode === "static") return;
       const card = cardRef.current;
       if (!card) return;
 
@@ -153,11 +156,11 @@ export default function BorderGlow({
       card.style.setProperty("--edge-proximity", `${(edge * 100).toFixed(3)}`);
       card.style.setProperty("--cursor-angle", `${angle.toFixed(3)}deg`);
     },
-    [getEdgeProximity, getCursorAngle]
+    [getEdgeProximity, getCursorAngle, performanceMode]
   );
 
   useEffect(() => {
-    if (!animated || !cardRef.current) return;
+    if (performanceMode === "static" || !animated || !cardRef.current) return;
     const card = cardRef.current;
     const angleStart = 110;
     const angleEnd = 465;
@@ -192,7 +195,7 @@ export default function BorderGlow({
       onUpdate: (v) => card.style.setProperty("--edge-proximity", String(v)),
       onEnd: () => card.classList.remove("sweep-active"),
     });
-  }, [animated]);
+  }, [animated, performanceMode]);
 
   const styleVars = {
     "--card-bg": backgroundColor,
@@ -208,8 +211,8 @@ export default function BorderGlow({
   return (
     <div
       ref={cardRef}
-      onPointerMove={handlePointerMove}
-      className={`border-glow-card ${className}`}
+      onPointerMove={performanceMode === "interactive" ? handlePointerMove : undefined}
+      className={`border-glow-card ${performanceMode === "static" ? "border-glow-static" : ""} ${className}`}
       style={styleVars}
     >
       <span className="edge-light" />
