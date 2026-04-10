@@ -174,7 +174,7 @@ export default function MainPage() {
         <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
           <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
             <span className="group-hover:hidden">Sign In/Sign Up</span>
-            <span className="hidden group-hover:inline">{"-> Sign In/Sign Up"}</span>
+              <span className="hidden group-hover:inline">Sign In/Sign Up</span>
           </span>
         </StarBorder>
       </Link>
