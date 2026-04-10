@@ -4,7 +4,7 @@ import RippleGrid from "@/components/RippleGrid";
 export default function GetStartedPage() {
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0 h-screen w-screen">
         <RippleGrid
           enableRainbow
           gridColor="#5227FF"
