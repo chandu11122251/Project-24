@@ -163,6 +163,43 @@ body {
 .content-section {
   scroll-margin-top: 24px;
 }
+.section-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.7);
+  font: 700 11px/1 Helvetica, Arial, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  z-index: 20;
+}
+.section-btn-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+.section-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.section-action-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  stroke-width: 2.5;
+  fill: none;
+}
 </style>
 </head>
 <body>
@@ -196,6 +233,12 @@ body {
     </div>
     <div class="objective-pill" style="background:rgba(196,163,90,0.1);color:#c4a35a;">Objective — Cognitive Agility &amp; Logic Hardening</div>
     <div class="desc-canvas-wrap" id="desc0"></div>
+    <div class="section-btn-container">
+      <button class="section-action-btn" onclick="navigateTo('/puzzle-games')">
+        <span>Launch Arena</span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
     <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
     </section>
 
@@ -212,6 +255,12 @@ body {
     </div>
     <div class="objective-pill" style="background:rgba(100,140,255,0.1);color:#6490ff;">Objective — Architectural Integrity &amp; Craftsmanship</div>
     <div class="desc-canvas-wrap" id="desc1"></div>
+    <div class="section-btn-container">
+      <button class="section-action-btn" onclick="navigateTo('/challenges')">
+        <span>View Challenges</span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
     <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
     </section>
 
@@ -228,6 +277,12 @@ body {
     </div>
     <div class="objective-pill" style="background:rgba(232,100,130,0.1);color:#e86482;">Objective — Velocity &amp; Radical Collaboration</div>
     <div class="desc-canvas-wrap" id="desc2"></div>
+    <div class="section-btn-container">
+      <button class="section-action-btn" onclick="navigateTo('/main#hackathons')">
+        <span>Browse Events</span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
     <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
     </section>
 
@@ -244,6 +299,12 @@ body {
     </div>
     <div class="objective-pill" style="background:rgba(80,200,140,0.1);color:#50c88c;">Objective — Wisdom Compression &amp; Mental Models</div>
     <div class="desc-canvas-wrap" id="desc3"></div>
+    <div class="section-btn-container">
+      <button class="section-action-btn" onclick="navigateTo('/main#webinars')">
+        <span>Watch Sessions</span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
     <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
     </section>
 
@@ -260,6 +321,12 @@ body {
     </div>
     <div class="objective-pill" style="background:rgba(150,100,220,0.1);color:#9664dc;">Objective — Knowledge Solidification &amp; Peer Feedback</div>
     <div class="desc-canvas-wrap" id="desc4"></div>
+    <div class="section-btn-container">
+      <button class="section-action-btn" onclick="navigateTo('/main#study-groups')">
+        <span>Join Cohort</span>
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
     <div class="section-divider"><div class="divider-line"></div><div class="divider-dot"></div><div class="divider-line"></div></div>
     </section>
 
@@ -650,6 +717,10 @@ window.addEventListener('message', (event) => {
   if (!sectionId) return;
   scrollToSection(sectionId, 'smooth');
 });
+
+function navigateTo(path) {
+  window.parent.postMessage({ type: 'project24-navigate', path }, '*');
+}
 </script>
 </body>
 </html>
