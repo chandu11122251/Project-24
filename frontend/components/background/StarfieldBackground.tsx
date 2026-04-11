@@ -63,6 +63,7 @@ export default function StarfieldBackground({
 
     const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h);
+      let totalVx = 0, totalVy = 0;
 
       for (let i = 0; i < stars.length; i++) {
         const a = stars[i];
@@ -85,6 +86,8 @@ export default function StarfieldBackground({
         }
       }
 
+      // --- Mouse-reactive connections + gather nearest stars ---
+      const nearestStars: Array<{ x: number; y: number; dist: number; opacity: number }> = [];
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         const dx = s.x - mouse.x;
@@ -99,6 +102,7 @@ export default function StarfieldBackground({
           ctx.moveTo(s.x, s.y);
           ctx.lineTo(mouse.x, mouse.y);
           ctx.stroke();
+          nearestStars.push({ x: s.x, y: s.y, dist, opacity: alpha });
         }
       }
 
@@ -123,6 +127,8 @@ export default function StarfieldBackground({
 
         s.x += s.vx;
         s.y += s.vy;
+        totalVx += s.vx;
+        totalVy += s.vy;
         if (s.x < -10) s.x = w + 10;
         if (s.x > w + 10) s.x = -10;
         if (s.y < -10) s.y = h + 10;

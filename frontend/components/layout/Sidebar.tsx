@@ -12,28 +12,6 @@ function cn(...inputs: Array<string | false | null | undefined>) {
   return twMerge(clsx(inputs));
 }
 
-function ItemLabel({
-  text,
-  collapsed,
-  className,
-}: {
-  text: string;
-  collapsed: boolean;
-  className?: string;
-}) {
-  return (
-    <span
-      className={cn(
-        "overflow-hidden whitespace-nowrap transition-all duration-200",
-        collapsed ? "pointer-events-none w-0 opacity-0" : "w-auto opacity-100",
-        className
-      )}
-    >
-      {text}
-    </span>
-  );
-}
-
 type SectionItem = {
   label: string;
   anchor: string;
@@ -169,7 +147,7 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
         colors={["#67e8f9", "#22d3ee", "#06b6d4"]}
         className="h-full w-full"
       >
-      <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-[#0d6e6e]/60 to-transparent" />
+      <div className="absolute inset-y-0 right-0 w-px bg-linear-to-b from-transparent via-[#0d6e6e]/60 to-transparent" />
 
       <div className="relative flex h-full w-full flex-col overflow-hidden rounded-r-[22px] border border-[#0d6e6e]/20 border-l-0 bg-[#090909]">
         <div

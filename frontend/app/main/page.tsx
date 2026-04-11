@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
-import Link from "next/link";
+import { TransitionLink } from "@/components/effects/TransitionLink";
+import { KineticCard, KineticPage } from "@/components/effects/KineticTransition";
 import { useCallback, useEffect, useRef } from "react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import BorderGlow from "@/components/effects/BorderGlow";
@@ -170,16 +171,22 @@ export default function MainPage() {
 
   return (
     <StarfieldBackground className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
-      <Link href="/login" className="group fixed right-4 top-4 z-50">
-        <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
-          <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
-            <span className="group-hover:hidden">Sign In/Sign Up</span>
-              <span className="hidden group-hover:inline">Sign In/Sign Up</span>
-          </span>
-        </StarBorder>
-      </Link>
+      <KineticPage pageKey="main" className="relative z-10 flex min-h-screen w-full flex-col px-4 py-4">
+        <div className="flex w-full justify-end z-50">
+          <KineticCard index={1}>
+            <TransitionLink href="/login" className="group block">
+              <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
+                <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
+                  <span className="group-hover:hidden">Sign In/Sign Up</span>
+                  <span className="hidden group-hover:inline">Sign In/Sign Up</span>
+                </span>
+              </StarBorder>
+            </TransitionLink>
+          </KineticCard>
+        </div>
 
-      <div className="relative z-10 flex min-h-screen w-full items-center justify-center px-4 py-10">
+        <div className="flex flex-1 w-full items-center justify-center py-6">
+          <KineticCard index={0} className="w-full max-w-[920px]">
         <BorderGlow
           performanceMode="static"
           edgeSensitivity={32}
@@ -191,7 +198,7 @@ export default function MainPage() {
           coneSpread={24}
           animated={false}
           colors={["#67e8f9", "#38bdf8", "#0ea5e9"]}
-          className="w-full max-w-[920px]"
+          className="w-full"
         >
           <iframe
             ref={iframeRef}
@@ -209,7 +216,9 @@ export default function MainPage() {
             title="Project-24: Orb Wrapping Layout"
           />
         </BorderGlow>
-      </div>
+          </KineticCard>
+        </div>
+      </KineticPage>
     </StarfieldBackground>
   );
 }

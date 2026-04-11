@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, FormEvent } from "react";
-import Link from "next/link";
+import { TransitionLink } from "@/components/effects/TransitionLink";
+import { KineticCard, KineticPage } from "@/components/effects/KineticTransition";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import BorderGlow from "@/components/effects/BorderGlow";
 
@@ -38,6 +39,8 @@ export default function LoginPage() {
 
   return (
     <StarfieldBackground>
+      <KineticPage pageKey="login" className="flex min-h-screen w-full items-center justify-center p-6 relative z-10 max-w-[420px]">
+        <KineticCard index={0} className="w-full">
       <BorderGlow
         edgeSensitivity={30}
         glowColor="40 80 80"
@@ -112,12 +115,12 @@ export default function LoginPage() {
 
             {/* Footer */}
             <div className="flex items-center w-full justify-between text-sm pt-2">
-              <Link
+              <TransitionLink
                 href="/main"
                 className="text-white/50 hover:text-white transition-colors"
               >
                 ← Back
-              </Link>
+              </TransitionLink>
               <button
                 type="button"
                 onClick={() => setMode("signin")}
@@ -189,17 +192,19 @@ export default function LoginPage() {
               >
                 ← Create account
               </button>
-              <Link
+              <TransitionLink
                 href="/forgot-password"
                 className="text-teal-400 hover:text-teal-300 transition-colors"
               >
                 Forgot password?
-              </Link>
+              </TransitionLink>
             </div>
           </div>
         )}
       </main>
       </BorderGlow>
+        </KineticCard>
+      </KineticPage>
     </StarfieldBackground>
   );
 }

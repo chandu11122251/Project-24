@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import RippleGridBackground from "../components/background/RippleGridBackground";
 import ClickSpark from "@/components/effects/ClickSpark";
+import KineticProviders from "@/components/effects/KineticProviders";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -30,7 +31,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full w-full antialiased`}
     >
       <body className="min-h-full w-full bg-[#06070f] text-white overflow-x-hidden m-0 p-0">
-        <RippleGridBackground>{children}</RippleGridBackground>
+        <KineticProviders>
+          <RippleGridBackground>{children}</RippleGridBackground>
+        </KineticProviders>
         <ClickSpark
           sparkColor="#ffffff"
           sparkSize={13}
