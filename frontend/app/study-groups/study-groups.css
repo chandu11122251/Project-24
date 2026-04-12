@@ -1,0 +1,314 @@
+/* ═══════════════════════════════════════════════
+   Study Groups Page — Premium Card Stack
+   ═══════════════════════════════════════════════ */
+
+/* ─── Hero Icon Pulse ─── */
+.study-groups-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.12), rgba(192, 132, 252, 0.08));
+  border: 1px solid rgba(168, 85, 247, 0.15);
+  position: relative;
+  animation: group-icon-breathe 3s ease-in-out infinite;
+}
+
+.study-groups-hero-icon::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, transparent 70%);
+  animation: group-icon-glow 3s ease-in-out infinite;
+}
+
+@keyframes group-icon-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes group-icon-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ─── Card Wrapper ─── */
+.study-group-card-wrapper {
+  opacity: 0;
+  transform: translateY(28px) scale(0.97);
+  animation: group-card-entrance 0.6s ease-out forwards;
+}
+
+@keyframes group-card-entrance {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.study-group-card-glow {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s ease;
+}
+
+.study-group-card-glow:hover {
+  transform: translateY(-2px);
+}
+
+/* ─── Card Interior ─── */
+.study-group-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-height: auto;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  gap: 16px;
+}
+
+@media (min-width: 860px) {
+  .study-group-card {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.study-group-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.02) 0%,
+      transparent 40%,
+      transparent 80%,
+      rgba(0, 0, 0, 0.15) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.study-group-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.study-group-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 860px) {
+  .study-group-card__info {
+    padding-right: 32px;
+  }
+}
+
+.study-group-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 14px;
+  color: var(--icon-accent, #a855f7);
+  background: linear-gradient(135deg,
+      color-mix(in srgb, var(--icon-accent, #a855f7) 15%, transparent),
+      color-mix(in srgb, var(--icon-accent, #a855f7) 5%, transparent));
+  border: 1px solid color-mix(in srgb, var(--icon-accent, #a855f7) 20%, transparent);
+  margin-bottom: 20px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--icon-accent, #a855f7) 15%, transparent);
+}
+
+.study-group-tag {
+  display: inline-flex;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.25s ease;
+}
+
+.study-group-tag:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.study-group-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  margin-top: 24px;
+  text-align: center;
+}
+
+.study-group-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.study-group-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.status-active {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.status-filling {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.25);
+}
+
+.study-group-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.study-group-meta__item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* ─── Webinar/StudyGroup Modal Shared Styles ─── */
+.webinar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 5, 10, 0.85);
+  backdrop-filter: blur(12px);
+}
+
+.webinar-modal-container {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  max-height: 90vh;
+  position: relative;
+}
+
+.webinar-modal-content {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+.webinar-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.webinar-modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.webinar-modal-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.webinar-modal-tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.webinar-modal-tab.active {
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.webinar-modal-tab[data-type="scheduled"].active {
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
+}
+
+.webinar-modal-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.webinar-modal-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(168, 85, 247, 0.3);
+  box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.05);
+}
+
+.webinar-modal-submit {
+  padding: 12px 28px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1px solid transparent;
+}
+
+.webinar-modal-submit.scheduled {
+  background: #a855f7;
+  color: white;
+  box-shadow: 0 8px 20px rgba(168, 85, 247, 0.25);
+}
+
+.webinar-modal-submit:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
