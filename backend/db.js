@@ -71,19 +71,35 @@ export const handleIdentitySynthesis = async (firebaseUser, provider) => {
     return existingUserId;
   }
 
-  // ── Step 2: Check if user doc exists — direct O(1) getDoc, NO query ──────
-  // We do NOT query by email here. Firestore's security rules engine rejects
-  // queries when the matching rule has per-document exists() calls (eitherBlocked)
-  // that cannot be proven safe across all results. A direct getDoc is always safe.
-  const userSnap = await getDoc(userRef);
-  const userAlreadyExists = userSnap.exists();
+  // ── Step 2: Cross-Provider Linking — Find existing user by email ──────
+  // If a user with this email already exists, we link the new identity to them
+  // instead of creating a new user doc.
+  let canonicalUserId = uid;
+  let userAlreadyExists = false;
 
-  // ── Step 3: Transaction — atomically write user + auth_identity ───────────
+  const usersByEmailQ = query(collection(db, "users"), where("email", "==", email), limit(1));
+  const emailSnap = await getDocs(usersByEmailQ);
+
+  if (!emailSnap.empty) {
+    // FOUND: Email already belongs to an existing user
+    canonicalUserId = emailSnap.docs[0].id;
+    userAlreadyExists = true;
+    console.log("[DB] Existing user found by email. Linking identity to:", canonicalUserId);
+  } else {
+    // NOT FOUND BY EMAIL: Check if the UID itself exists (fallback)
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      userAlreadyExists = true;
+      canonicalUserId = userSnap.id;
+    }
+  }
+
+  // ── Step 3: Transaction — atomically write auth_identity (+ user if new) ──
   await runTransaction(db, async (transaction) => {
     if (!userAlreadyExists) {
       // Brand-new user: create the Firestore profile
-      transaction.set(userRef, {
-        uid,
+      transaction.set(doc(db, "users", canonicalUserId), {
+        uid: canonicalUserId,
         email,
         username: displayName || email.split("@")[0],
         profile_picture: photoURL || null,
@@ -100,16 +116,16 @@ export const handleIdentitySynthesis = async (firebaseUser, provider) => {
 
     // Always write the auth_identity link (idempotent for this provider)
     transaction.set(identityRef, {
-      user_id: uid,
+      user_id: canonicalUserId,
       provider,
-      provider_user_id: uid,
+      provider_user_id: uid, // The specific UID from this provider
       email,
       last_login_at: serverTimestamp(),
       created_at: serverTimestamp(),
     });
   });
 
-  return uid;
+  return canonicalUserId;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
