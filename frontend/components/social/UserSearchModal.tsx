@@ -6,12 +6,15 @@ import { Search, X, User, ArrowRight, Loader2 } from "lucide-react";
 import { searchUsersByPrefix } from "@backend/db";
 import Link from "next/link";
 
+import { useAuth } from "@backend/AuthProvider";
+
 interface UserSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProps) {
+  const { user: currentUser } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -26,7 +29,8 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
       setIsLoading(true);
       try {
         const users = await searchUsersByPrefix(query);
-        setResults(users);
+        // Exclude current user from results
+        setResults(users.filter(u => u.id !== currentUser?.uid));
       } catch (err) {
         console.error("Search failed:", err);
       } finally {

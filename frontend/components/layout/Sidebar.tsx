@@ -5,8 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { BookOpen, Code2, Puzzle, Users, Video, Zap } from "lucide-react";
+import { Activity, BookOpen, Code2, Puzzle, Users, Video, Zap } from "lucide-react";
 import BorderGlow from "@/components/effects/BorderGlow";
+import { useAuth } from "@backend/AuthProvider";
 
 function cn(...inputs: Array<string | false | null | undefined>) {
   return twMerge(clsx(inputs));
@@ -25,6 +26,7 @@ type SidebarProps = {
 
 export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
   const pathname = usePathname();
+  const { user, userData } = useAuth();
   const [collapsed, setCollapsed] = useState(true);
   const [activeAnchor, setActiveAnchor] = useState<string>("#puzzle-games");
 
@@ -35,6 +37,7 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
       { label: "Hackathons", anchor: "#hackathons", Icon: Code2, badge: "3" },
       { label: "Webinars", anchor: "#webinars", Icon: Video },
       { label: "Study Groups", anchor: "#study-groups", Icon: Users, badge: "12" },
+
       { label: "About Us", anchor: "#about-us", Icon: BookOpen },
     ],
     []
@@ -49,8 +52,18 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
     pathname.startsWith("/main") ? anchor : `/main${anchor}`;
 
   useEffect(() => {
-    document.documentElement.classList.toggle("sidebar-collapsed", collapsed);
-    return () => document.documentElement.classList.remove("sidebar-collapsed");
+    // Sync class with state
+    const root = document.documentElement;
+    if (collapsed) {
+      root.classList.add("sidebar-collapsed");
+    } else {
+      root.classList.remove("sidebar-collapsed");
+    }
+    
+    return () => {
+      // We do NOT remove on clean up to maintain state during layout transitions 
+      // unless we know we are leaving the AppFrame entirely.
+    };
   }, [collapsed]);
 
   useEffect(() => {
@@ -176,16 +189,40 @@ export default function Sidebar({ hideTopOffset = false }: SidebarProps) {
           <Link
             href="/profile"
             className={cn(
-              "flex items-center rounded-lg py-2 hover:bg-white/5",
-              collapsed ? "justify-center px-0" : "gap-2.5 px-2"
+              "group/profile relative flex items-center rounded-lg py-2 transition-all duration-300 hover:bg-white/5",
+              collapsed ? "justify-center px-0" : "gap-3 px-2"
             )}
           >
-            <span className="inline-flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border border-[#0d6e6e] bg-[#084444] text-[11px] font-semibold text-[#12908f]">
-              P
-            </span>
-            <span className={cn("overflow-hidden transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
-              <span className="block whitespace-nowrap text-xs text-[#e8e8e8]">Profile</span>
-            </span>
+            <div className="relative shrink-0">
+              <div className={cn(
+                "flex h-[32px] w-[32px] items-center justify-center rounded-full border border-[#0d6e6e]/40 bg-[#084444]/20 transition-all duration-300 group-hover/profile:border-cyan-500/50 overflow-hidden",
+                userData?.profile_picture ? "" : "text-[11px] font-bold text-[#12908f] uppercase"
+              )}>
+                {userData?.profile_picture ? (
+                  <img src={userData.profile_picture} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <span>{userData?.username ? userData.username[0] : (user?.email ? user.email[0] : "P")}</span>
+                )}
+              </div>
+              {user && (
+                <div className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-[#090909] bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+              )}
+            </div>
+
+            <div className={cn("flex flex-col overflow-hidden transition-all duration-300", collapsed ? "w-0 opacity-0" : "w-auto opacity-100")}>
+              <span className="block truncate text-xs font-semibold text-[#e8e8e8] group-hover/profile:text-white transition-colors">
+                {userData?.username || (user?.email?.split('@')[0]) || "Synthesizing..."}
+              </span>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-[#12908f] group-hover/profile:text-cyan-400/80 transition-colors">
+                {user ? "Online" : "Guest Mode"}
+              </span>
+            </div>
+            
+            {!user && collapsed && (
+              <div className="absolute left-14 hidden group-hover/profile:block z-50 rounded bg-[#0d6e6e] px-2 py-1 text-[10px] whitespace-nowrap text-white font-black uppercase tracking-widest border border-cyan-400/30 shadow-[0_0_15px_rgba(6,182,212,0.3)]">
+                Sign In
+              </div>
+            )}
           </Link>
 
           <div className="my-1 h-px bg-[#0d6e6e]/20" />
