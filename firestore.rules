@@ -1,0 +1,160 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ─────────────────────────────────────────────────
+
+    // Is the request from a signed-in user?
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    // Is the caller the owner of a document by UID?
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+
+    // Does a block document exist between two users?
+    function isBlockedBy(blockerId, blockedId) {
+      return exists(/databases/$(database)/documents/blocks/$(blockerId + '_' + blockedId));
+    }
+
+    // Is either user blocking the other?
+    function eitherBlocked(a, b) {
+      return isBlockedBy(a, b) || isBlockedBy(b, a);
+    }
+
+
+    // ─────────────────────────────────────────────────
+    // USERS
+    // ─────────────────────────────────────────────────
+    match /users/{userId} {
+      // Any authenticated, non-blocked user can read a profile
+      allow read: if isAuth() && !eitherBlocked(request.auth.uid, userId);
+      // First-time account creation: UID must match the document ID (set by handleIdentitySynthesis)
+      allow create: if isAuth() && request.auth.uid == userId;
+      // Only the user themselves can update their profile
+      allow update: if isOwner(userId);
+      allow delete: if false;
+    }
+
+    // ─────────────────────────────────────────────────
+    // AUTH IDENTITIES
+    // ─────────────────────────────────────────────────
+    match /auth_identities/{identityId} {
+      // Allow reads for any authenticated user.
+      // CRITICAL: resource is null for non-existent docs, so we cannot use resource.data
+      // here. The document ID (provider:uid) is already opaque enough to not need further filtering.
+      allow read: if isAuth();
+      // Only the user whose UID matches the stored user_id can create/update
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+      allow update: if isAuth() && resource.data.user_id == request.auth.uid;
+      allow delete: if false;
+    }
+
+    // ─────────────────────────────────────────────────
+    // POSTS
+    // ─────────────────────────────────────────────────
+    match /posts/{postId} {
+      // Don't expose soft-deleted or blocked posts
+      allow read: if isAuth()
+        && resource.data.is_deleted == false
+        && !eitherBlocked(request.auth.uid, resource.data.user_id);
+
+      // Only post author can create/update their post
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+      allow update: if isOwner(resource.data.user_id);
+      allow delete: if false; // Use soft-delete only
+    }
+
+    // ─────────────────────────────────────────────────
+    // LIKES  {user_id}_{post_id}
+    // ─────────────────────────────────────────────────
+    match /likes/{likeId} {
+      allow read: if isAuth();
+      // Only the user embedded in the composite ID can create/delete their like
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if isAuth() && resource.data.user_id == request.auth.uid;
+    }
+
+    // ─────────────────────────────────────────────────
+    // COMMENTS
+    // ─────────────────────────────────────────────────
+    match /comments/{commentId} {
+      // Soft-deleted comments are visible as tombstones (is_deleted == true shows "[deleted]")
+      allow read: if isAuth()
+        && !eitherBlocked(request.auth.uid, resource.data.user_id);
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+      allow update: if isOwner(resource.data.user_id);
+      allow delete: if false; // Use soft-delete only
+    }
+
+    // ─────────────────────────────────────────────────
+    // FOLLOWS  {follower_id}_{following_id}
+    // ─────────────────────────────────────────────────
+    match /follows/{followId} {
+      allow read: if isAuth();
+      allow create: if isAuth()
+        && request.resource.data.follower_id == request.auth.uid
+        && !eitherBlocked(request.auth.uid, request.resource.data.following_id);
+      allow update: if isAuth() && resource.data.following_id == request.auth.uid; // accept/reject
+      allow delete: if isAuth() && (
+        resource.data.follower_id == request.auth.uid ||
+        resource.data.following_id == request.auth.uid
+      );
+    }
+
+    // ─────────────────────────────────────────────────
+    // BLOCKS  {blocker_id}_{blocked_id}
+    // ─────────────────────────────────────────────────
+    match /blocks/{blockId} {
+      allow read: if isAuth() && (
+        resource.data.blocker_id == request.auth.uid ||
+        resource.data.blocked_id == request.auth.uid
+      );
+      allow create: if isAuth() && request.resource.data.blocker_id == request.auth.uid;
+      allow delete: if isAuth() && resource.data.blocker_id == request.auth.uid;
+    }
+
+    // ─────────────────────────────────────────────────
+    // NOTIFICATIONS
+    // ─────────────────────────────────────────────────
+    match /notifications/{notifId} {
+      allow read: if isAuth() && resource.data.user_id == request.auth.uid;
+      allow create: if isAuth(); // Any authenticated user can send a notification (e.g. follow)
+      allow update: if isAuth() && resource.data.user_id == request.auth.uid; // mark as read
+      allow delete: if isAuth() && resource.data.user_id == request.auth.uid;
+    }
+
+    // ─────────────────────────────────────────────────
+    // ACTIVITIES
+    // ─────────────────────────────────────────────────
+    match /activities/{activityId} {
+      allow read: if isAuth() && resource.data.user_id == request.auth.uid;
+      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if false; // Deleted by scheduled Cloud Function only
+    }
+
+    // ─────────────────────────────────────────────────
+    // FEEDS  {user_id}/timeline/{post_id}
+    // Fan-out documents — written by Cloud Functions, read by owner.
+    // ─────────────────────────────────────────────────
+    match /feeds/{userId}/timeline/{postId} {
+      allow read: if isOwner(userId);
+      allow write: if false; // Cloud Functions only
+    }
+
+    // ─────────────────────────────────────────────────
+    // HASHTAGS  {tag}/posts/{post_id}
+    // Public discovery — written by Cloud Functions on post create.
+    // ─────────────────────────────────────────────────
+    match /hashtags/{tag}/posts/{postId} {
+      allow read: if isAuth();
+      allow write: if isAuth(); // Writes come from createPost in db.js
+    }
+
+  }
+}
