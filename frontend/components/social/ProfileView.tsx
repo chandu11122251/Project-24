@@ -171,7 +171,7 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
   const handleToggleFollow = async () => {
     if (!user?.uid || !targetUserId || isSelf) return;
     try {
-      if (relStatus === 'none') {
+      if (relStatus === 'none' || relStatus === 'follower') {
         await followUser(user.uid, targetUserId);
       } else {
         await unfollowUser(user.uid, targetUserId);
@@ -348,11 +348,17 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
                   </h2>
                   <div className="friends-list">
                     {following.length > 0 ? following.map(friend => (
-                      <Link key={friend.id} href={`/${friend.name || friend.id}`} className="friend-item group">
+                      <Link key={friend.id} href={`/${friend.id}`} className="friend-item group">
                         <div className="friend-avatar bg-cyan-500/10 border border-cyan-500/20 overflow-hidden">
-                          {friend.photoURL ? <img src={friend.photoURL} alt="" /> : <span className="text-sm font-bold text-cyan-400">{friend.name?.[0] || 'U'}</span>}
+                          {friend.profile_picture ? (
+                            <img src={friend.profile_picture} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-sm font-bold text-cyan-400">{friend.username?.[0] || 'U'}</span>
+                          )}
                         </div>
-                        <span className="friend-name group-hover:text-cyan-400 transition-colors">{friend.name}</span>
+                        <span className="friend-name group-hover:text-cyan-400 transition-colors">
+                          {friend.username || "Synthesizing..."}
+                        </span>
                         <UserCheck size={14} className="ml-auto text-cyan-500/40" />
                       </Link>
                     )) : (

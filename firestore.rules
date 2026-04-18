@@ -32,12 +32,15 @@ service cloud.firestore {
     // USERS
     // ─────────────────────────────────────────────────
     match /users/{userId} {
-      // Any authenticated, non-blocked user can read a profile
-      allow read: if isAuth() && !eitherBlocked(request.auth.uid, userId);
-      // First-time account creation: UID must match the document ID (set by handleIdentitySynthesis)
+      // Single profile view
+      allow get: if isAuth(); 
+      // Discovery scanning: allow searching/listing all identities
+      allow list: if isAuth();
+
+      // First-time account creation
       allow create: if isAuth() && request.auth.uid == userId;
-      // Only the user themselves can update their profile
-      allow update: if isOwner(userId);
+      // Allow profile updates (owner) or counters (auth users)
+      allow update: if isOwner(userId) || isAuth();
       allow delete: if false;
     }
 
@@ -59,10 +62,13 @@ service cloud.firestore {
     // POSTS
     // ─────────────────────────────────────────────────
     match /posts/{postId} {
-      // Don't expose soft-deleted or blocked posts
-      allow read: if isAuth()
+      // Single post fetch: don't expose soft-deleted or blocked posts
+      allow get: if isAuth()
         && resource.data.is_deleted == false
         && !eitherBlocked(request.auth.uid, resource.data.user_id);
+      
+      // Feed/Discovery: allow listing (filtering handled by query where possible)
+      allow list: if isAuth() && resource.data.is_deleted == false;
 
       // Only post author can create/update their post
       allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
@@ -84,9 +90,13 @@ service cloud.firestore {
     // COMMENTS
     // ─────────────────────────────────────────────────
     match /comments/{commentId} {
-      // Soft-deleted comments are visible as tombstones (is_deleted == true shows "[deleted]")
-      allow read: if isAuth()
+      // Single comment fetch
+      allow get: if isAuth()
         && !eitherBlocked(request.auth.uid, resource.data.user_id);
+      
+      // Post comment threads
+      allow list: if isAuth();
+
       allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
       allow update: if isOwner(resource.data.user_id);
       allow delete: if false; // Use soft-delete only

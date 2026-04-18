@@ -656,7 +656,17 @@ export const getFollowing = async (userId, pageSize = 30, cursor = null) => {
   );
   if (cursor) q = query(q, startAfter(cursor));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => d.data().following_id);
+  
+  // Enforce resolution of user objects for each relationship
+  const ids = snap.docs.map((d) => d.data().following_id);
+  const userDocs = await Promise.all(ids.map(id => getDoc(doc(db, "users", id))));
+  
+  return userDocs.map(snap => {
+    if (snap.exists()) {
+      return { id: snap.id, ...snap.data() };
+    }
+    return null;
+  }).filter(Boolean);
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
