@@ -4,11 +4,9 @@
 import { auth, googleProvider, githubProvider } from "./firebaseConfig";
 import {
   signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  sendPasswordResetEmail,
   signOut as firebaseSignOut,
   updateProfile,
+  signInWithCustomToken,
 } from "firebase/auth";
 import { handleIdentitySynthesis } from "./db";
 
@@ -76,95 +74,29 @@ export const signInWithGithub = async () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EMAIL / PASSWORD
+// CUSTOM TOKEN (OTP)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Creates a new user with email and password.
- * @param {string} email
- * @param {string} password
- * @param {string} username - Display name set on the Firebase user.
- * @returns {Promise<{ firebaseUser, canonicalUserId }>}
+ * Signs in using a Custom Firebase Token (used by the new OTP backend flow).
+ * Automatically runs identity synthesis to perfectly map the user to their Single User account.
  */
-export const signUpWithEmail = async (email, password, username) => {
+export const signInWithCustomAuthToken = async (customToken, username = null) => {
   try {
-    const credential = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const firebaseUser = credential.user;
+    const credential = await signInWithCustomToken(auth, customToken);
+    let firebaseUser = credential.user;
+    
+    // If username is provided (e.g. signup flow), attach it
+    if (username && !firebaseUser.displayName) {
+       await updateProfile(firebaseUser, { displayName: username });
+       firebaseUser = { ...firebaseUser, displayName: username };
+    }
 
-    // Attach display name to Firebase Auth profile
-    await updateProfile(firebaseUser, { displayName: username });
-
-    // Synthesize identity with display name now available
-    const userWithName = { ...firebaseUser, displayName: username };
-    const canonicalUserId = await handleIdentitySynthesis(
-      userWithName,
-      "email"
-    );
-
+    const canonicalUserId = await handleIdentitySynthesis(firebaseUser, "email");
     return { firebaseUser, canonicalUserId };
   } catch (error) {
-    if (error.code === "auth/email-already-in-use") {
-      throw new Error("This email is already registered. Try signing in.");
-    }
-    if (error.code === "auth/weak-password") {
-      throw new Error("Password must be at least 6 characters.");
-    }
-    console.error("[Auth] Email sign-up error:", error.code, error.message);
-    throw new Error("Sign-up failed. Please try again.");
-  }
-};
-
-/**
- * Signs in with email and password.
- * Runs identity synthesis to update last_login_at on the auth_identity doc.
- * @param {string} email
- * @param {string} password
- * @returns {Promise<{ firebaseUser, canonicalUserId }>}
- */
-export const signInWithEmail = async (email, password) => {
-  try {
-    const credential = await signInWithEmailAndPassword(auth, email, password);
-    const firebaseUser = credential.user;
-    const canonicalUserId = await handleIdentitySynthesis(
-      firebaseUser,
-      "email"
-    );
-    return { firebaseUser, canonicalUserId };
-  } catch (error) {
-    if (
-      error.code === "auth/user-not-found" ||
-      error.code === "auth/wrong-password" ||
-      error.code === "auth/invalid-credential"
-    ) {
-      throw new Error("Incorrect email or password.");
-    }
-    console.error("[Auth] Email sign-in error:", error.code, error.message);
-    throw new Error("Sign-in failed. Please try again.");
-  }
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// PASSWORD RESET
-// ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Sends a password reset email.
- * @param {string} email
- */
-export const sendPasswordReset = async (email) => {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (error) {
-    if (error.code === "auth/user-not-found") {
-      // Don't leak whether the email exists — silently succeed
-      return;
-    }
-    console.error("[Auth] Password reset error:", error.code, error.message);
-    throw new Error("Failed to send reset email.");
+    console.error("[Auth] Custom token sign-in error:", error);
+    throw new Error("OTP Authentication verification failed.");
   }
 };
 
