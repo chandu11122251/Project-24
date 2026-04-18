@@ -1,7 +1,6 @@
-"use client";
-
 import { useRef, useEffect } from 'react';
 import { Renderer, Program, Triangle, Mesh } from 'ogl';
+import './RippleGrid.css';
 
 const RippleGrid = ({
   enableRainbow = false,
@@ -22,7 +21,6 @@ const RippleGrid = ({
   const targetMouseRef = useRef({ x: 0.5, y: 0.5 });
   const mouseInfluenceRef = useRef(0);
   const uniformsRef = useRef(null);
-  const animationFrameRef = useRef(0);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -180,43 +178,26 @@ void main() {
     const handleMouseMove = e => {
       if (!mouseInteraction || !containerRef.current) return;
       const rect = containerRef.current.getBoundingClientRect();
-      const inside =
-        e.clientX >= rect.left &&
-        e.clientX <= rect.right &&
-        e.clientY >= rect.top &&
-        e.clientY <= rect.bottom;
-
-      if (!inside) {
-        mouseInfluenceRef.current = 0.0;
-        return;
-      }
-
       const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
+      const y = 1.0 - (e.clientY - rect.top) / rect.height; // Flip Y coordinate
       targetMouseRef.current = { x, y };
+    };
+
+    const handleMouseEnter = () => {
+      if (!mouseInteraction) return;
       mouseInfluenceRef.current = 1.0;
     };
 
-    const handlePointerDown = e => {
-      if (!mouseInteraction || !containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
-      if (x < 0 || x > 1 || y < 0 || y > 1) return;
-      targetMouseRef.current = { x, y };
-      mouseInfluenceRef.current = 1.0;
-    };
-
-    const handleMouseLeaveWindow = () => {
+    const handleMouseLeave = () => {
       if (!mouseInteraction) return;
       mouseInfluenceRef.current = 0.0;
     };
 
     window.addEventListener('resize', resize);
     if (mouseInteraction) {
-      window.addEventListener('pointermove', handleMouseMove);
-      window.addEventListener('pointerdown', handlePointerDown);
-      window.addEventListener('mouseout', handleMouseLeaveWindow);
+      containerRef.current.addEventListener('mousemove', handleMouseMove);
+      containerRef.current.addEventListener('mouseenter', handleMouseEnter);
+      containerRef.current.addEventListener('mouseleave', handleMouseLeave);
     }
     resize();
 
@@ -234,21 +215,21 @@ void main() {
       uniforms.mousePosition.value = [mousePositionRef.current.x, mousePositionRef.current.y];
 
       renderer.render({ scene: mesh });
-      animationFrameRef.current = requestAnimationFrame(render);
+      requestAnimationFrame(render);
     };
 
-    animationFrameRef.current = requestAnimationFrame(render);
+    requestAnimationFrame(render);
 
+    const container = containerRef.current;
     return () => {
       window.removeEventListener('resize', resize);
-      if (mouseInteraction) {
-        window.removeEventListener('pointermove', handleMouseMove);
-        window.removeEventListener('pointerdown', handlePointerDown);
-        window.removeEventListener('mouseout', handleMouseLeaveWindow);
+      if (mouseInteraction && container) {
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mouseenter', handleMouseEnter);
+        container.removeEventListener('mouseleave', handleMouseLeave);
       }
-      cancelAnimationFrame(animationFrameRef.current);
       renderer.gl.getExtension('WEBGL_lose_context')?.loseContext();
-      containerRef.current?.removeChild(gl.canvas);
+      container?.removeChild(gl.canvas);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -290,17 +271,7 @@ void main() {
     mouseInteractionRadius
   ]);
 
-  return (
-    <div
-      ref={containerRef}
-      style={{
-        width: '100%',
-        height: '100%',
-        position: 'relative',
-        overflow: 'hidden'
-      }}
-    />
-  );
+  return <div ref={containerRef} className="ripple-grid-container" />;
 };
 
 export default RippleGrid;

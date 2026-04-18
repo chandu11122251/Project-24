@@ -71,7 +71,7 @@ export default function MessagingPage() {
 
   return (
     <StarfieldBackground className="relative min-h-screen w-full bg-[#06070f] text-white">
-      <KineticPage pageKey="messaging" className="relative z-10 w-full px-6 py-8">
+      <KineticPage pageKey="messaging" className="relative z-10 w-full px-6 py-8 page-offset">
         
         {/* Header/Nav */}
         <nav className="flex items-center justify-between mb-8">

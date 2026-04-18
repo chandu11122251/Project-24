@@ -1,36 +1,31 @@
+"use client";
+
 import { TransitionLink } from "@/components/effects/TransitionLink";
-import { KineticPage } from "@/components/effects/KineticTransition";
-import RippleGrid from "@/components/RippleGrid";
+import { KineticCard, KineticPage } from "@/components/effects/KineticTransition";
+import RippleGridBackground from "@/components/background/RippleGridBackground";
+import StarBorder from "@/components/effects/StarBorder";
+import { useAuth } from "@backend/AuthProvider";
 
 export default function GetStartedPage() {
+  const { user, loading } = useAuth();
+
   return (
-    <KineticPage pageKey="getstarted">
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
-      <div className="fixed inset-0 z-0 h-screen w-screen">
-        <RippleGrid
-          enableRainbow
-          gridColor="#5227FF"
-          rippleIntensity={0.14}
-          gridSize={27}
-          gridThickness={16}
-          fadeDistance={4.4}
-          vignetteStrength={5}
-          glowIntensity={0.35}
-          opacity={1}
-          gridRotation={0}
-          mouseInteraction
-          mouseInteractionRadius={2.2}
-        />
-      </div>
-      <main className="relative z-10 flex min-h-screen w-full items-end justify-center px-6 pb-12">
-        <TransitionLink
-          href="/main"
-          className="inline-flex min-w-[170px] items-center justify-center rounded-lg border border-cyan-400/50 bg-cyan-500/15 px-6 py-3 text-sm font-semibold text-cyan-100 transition hover:bg-cyan-500/25"
-        >
-          Get Started
-        </TransitionLink>
-      </main>
+    <div className="relative h-screen w-screen overflow-hidden bg-[#06070f]">
+      <RippleGridBackground className="fixed inset-0 z-0 h-full w-full" />
+      
+      <KineticPage 
+        pageKey="getstarted" 
+        className="fixed inset-0 z-10 flex flex-col items-center justify-end px-6 pb-32 pointer-events-none"
+      >
+        <KineticCard index={0} className="pointer-events-auto">
+          <TransitionLink
+            href="/main"
+            className="inline-flex min-w-[240px] items-center justify-center rounded-lg border border-cyan-400/50 bg-cyan-500/10 px-10 py-5 text-base font-bold text-cyan-50 transition-all duration-300 hover:bg-cyan-500/20 hover:scale-110 active:scale-95 uppercase tracking-[0.25em] shadow-[0_0_25px_rgba(34,211,238,0.15)] glow-cyan-sm"
+          >
+            Get Started
+          </TransitionLink>
+        </KineticCard>
+      </KineticPage>
     </div>
-    </KineticPage>
   );
 }

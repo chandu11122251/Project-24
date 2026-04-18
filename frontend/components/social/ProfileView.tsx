@@ -195,7 +195,7 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
       if (p.id === postId) {
         return { 
           ...p, 
-          likesCount: currentlyLiked ? (p.likesCount || 1) - 1 : (p.likesCount || 0) + 1 
+          like_count: currentlyLiked ? (p.like_count || 1) - 1 : (p.like_count || 0) + 1 
         };
       }
       return p;
@@ -394,16 +394,16 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
                         <span className="post-date">{post.date}</span>
                       </div>
                     </div>
-                    <p className="post-content">{post.content}</p>
+                    <p className="post-content">{post.caption}</p>
                     <div className="post-footer">
                       <button className="post-action group" onClick={() => handleToggleLike(post.id)}>
-                        <Heart size={16} className={likedPosts[post.id] ? "text-red-500 fill-current" : ""} /> {post.likesCount}
+                        <Heart size={16} className={likedPosts[post.id] ? "text-red-500 fill-current" : ""} /> {post.like_count || 0}
                       </button>
                       <button 
                         className="post-action" 
                         onClick={() => { setActiveCommentPostId(post.id); setCommentModalOpen(true); }}
                       >
-                        <MessageSquare size={16} /> {post.commentsCount}
+                        <MessageSquare size={16} /> {post.comment_count || 0}
                       </button>
                     </div>
                   </div>
@@ -435,7 +435,7 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
                     <div className="manage-posts-list">
                       {posts.map(p => (
                         <div key={p.id} className="manage-post-item">
-                          <span className="manage-post-item__text">{p.content}</span>
+                          <span className="manage-post-item__text">{p.caption}</span>
                           <button 
                             className="btn-delete-post" 
                             onClick={() => deletePost(p.id, user!.uid)}

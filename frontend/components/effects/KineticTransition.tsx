@@ -112,9 +112,15 @@ type KineticPageProps = {
   children: ReactNode;
   pageKey: string;
   className?: string;
+  suppressHydrationWarning?: boolean;
 };
 
-export function KineticPage({ children, pageKey, className = "" }: KineticPageProps) {
+export function KineticPage({ 
+  children, 
+  pageKey, 
+  className = "", 
+  suppressHydrationWarning 
+}: KineticPageProps) {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
@@ -131,7 +137,8 @@ export function KineticPage({ children, pageKey, className = "" }: KineticPagePr
       {!isExiting && (
         <motion.div
           key={pageKey}
-        className={className}
+          className={className}
+          suppressHydrationWarning={suppressHydrationWarning}
         initial={{
           opacity: 0,
           y: entry.y + 40,
@@ -181,11 +188,18 @@ export function KineticGlowBorder({
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
+    let rafId: number;
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      });
     };
     window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const shadowX = useMemo(() => {

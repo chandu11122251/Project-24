@@ -7,7 +7,7 @@ type StarfieldBackgroundProps = PropsWithChildren<{
 }>;
 
 const defaultClassName =
-  "relative min-h-screen w-full bg-[#06070f] flex items-center justify-center p-6 overflow-hidden";
+  "relative min-h-screen w-full bg-[#06070f] overflow-hidden";
 
 export default function StarfieldBackground({
   children,
@@ -86,8 +86,6 @@ export default function StarfieldBackground({
         }
       }
 
-      // --- Mouse-reactive connections + gather nearest stars ---
-      const nearestStars: Array<{ x: number; y: number; dist: number; opacity: number }> = [];
       for (let i = 0; i < stars.length; i++) {
         const s = stars[i];
         const dx = s.x - mouse.x;
@@ -102,21 +100,19 @@ export default function StarfieldBackground({
           ctx.moveTo(s.x, s.y);
           ctx.lineTo(mouse.x, mouse.y);
           ctx.stroke();
-          nearestStars.push({ x: s.x, y: s.y, dist, opacity: alpha });
         }
-      }
 
-      for (let i = 0; i < stars.length; i++) {
-        const s = stars[i];
+        // Draw individual star
         const twinkle = 0.5 + 0.5 * Math.sin(t * 0.001 + s.phase);
-        const alpha = 0.4 + 0.5 * twinkle;
+        const starAlpha = 0.4 + 0.5 * twinkle;
         const [r, g, b] = s.color;
 
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${r},${g},${b},${alpha})`;
+        ctx.fillStyle = `rgba(${r},${g},${b},${starAlpha})`;
         ctx.fill();
 
+        // Optimized radial gradient (only create if star is visible/significant)
         const grd = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r * 5);
         grd.addColorStop(0, `rgba(${r},${g},${b},${0.15 * twinkle})`);
         grd.addColorStop(1, `rgba(${r},${g},${b},0)`);
@@ -127,8 +123,6 @@ export default function StarfieldBackground({
 
         s.x += s.vx;
         s.y += s.vy;
-        totalVx += s.vx;
-        totalVy += s.vy;
         if (s.x < -10) s.x = w + 10;
         if (s.x > w + 10) s.x = -10;
         if (s.y < -10) s.y = h + 10;

@@ -70,9 +70,13 @@ service cloud.firestore {
       // Feed/Discovery: allow listing (filtering handled by query where possible)
       allow list: if isAuth() && resource.data.is_deleted == false;
 
-      // Only post author can create/update their post
+      // Post creation: Only author
       allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
-      allow update: if isOwner(resource.data.user_id);
+
+      // Post Author: Full control
+      // Other Users: Can increment/decrement interaction counters
+      allow update: if isOwner(resource.data.user_id)
+        || (isAuth() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['like_count', 'comment_count']));
       allow delete: if false; // Use soft-delete only
     }
 

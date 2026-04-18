@@ -363,6 +363,7 @@ export const toggleLike = async (userId, postId) => {
 
   return await runTransaction(db, async (transaction) => {
     const likeSnap = await transaction.get(likeRef);
+    const postSnap = await transaction.get(postRef);
 
     if (likeSnap.exists()) {
       // Unlike
@@ -378,16 +379,20 @@ export const toggleLike = async (userId, postId) => {
       });
       transaction.update(postRef, { like_count: increment(1) });
 
-      // Activity log entry
+      // Activity log entry - specialized for "like"
       const activityRef = doc(collection(db, "activities"));
       const ninetyDays = Timestamp.fromDate(
         new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
       );
+      
+      const postData = postSnap.exists() ? postSnap.data() : {};
+      
       transaction.set(activityRef, {
         user_id: userId,
-        type: "liked_post",
+        type: "like",
         target_id: postId,
         target_type: "post",
+        post_preview: postData.caption ? (postData.caption.slice(0, 60) + (postData.caption.length > 60 ? "..." : "")) : "Post",
         created_at: serverTimestamp(),
         expires_at: ninetyDays,
       });
@@ -432,6 +437,8 @@ export const addComment = async (userId, postId, text, parentCommentId = null) =
     }
 
     const commentRef = doc(collection(db, "comments"));
+    const postData = postSnap.data();
+
     transaction.set(commentRef, {
       post_id: postId,
       user_id: userId,
@@ -444,6 +451,19 @@ export const addComment = async (userId, postId, text, parentCommentId = null) =
     });
 
     transaction.update(postRef, { comment_count: increment(1) });
+
+    // Activity log entry - specialized for "comment"
+    const activityRef = doc(collection(db, "activities"));
+    transaction.set(activityRef, {
+      user_id: userId,
+      type: "comment",
+      target_id: postId,
+      target_type: "post",
+      text: text.slice(0, 100),
+      post_preview: postData.caption ? (postData.caption.slice(0, 60) + (postData.caption.length > 60 ? "..." : "")) : "Post",
+      created_at: serverTimestamp(),
+      expires_at: Timestamp.fromDate(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)),
+    });
 
     if (parentCommentId) {
       transaction.update(doc(db, "comments", parentCommentId), {
@@ -540,15 +560,15 @@ export const followUser = async (followerId, followingId) => {
 
     // Activity log
     const activityRef = doc(collection(db, "activities"));
+    const ninetyDays = Timestamp.fromDate(new Date(Date.now() + 90 * 24 * 60 * 60 * 1000));
+    
     transaction.set(activityRef, {
       user_id: followerId,
-      type: "sent_follow_request",
+      type: "connection",
       target_id: followingId,
       target_type: "user",
       created_at: serverTimestamp(),
-      expires_at: Timestamp.fromDate(
-        new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
-      ),
+      expires_at: ninetyDays,
     });
   });
 

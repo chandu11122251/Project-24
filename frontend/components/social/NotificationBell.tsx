@@ -147,9 +147,7 @@ export default function NotificationBell({ userId }: NotificationBellProps) {
               )}
             </div>
             
-            <div className="p-3 bg-black/40 text-center">
-               <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-white/20">Frequency: Starfield-24hz</span>
-            </div>
+
           </motion.div>
         )}
       </AnimatePresence>

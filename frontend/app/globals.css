@@ -134,20 +134,35 @@
   }
 }
 
-.app-main {
-  padding-top: 0;
-  padding-left: 0;
-  transition: padding-left 220ms ease;
+:root {
+  /* Default sidebar width - matches Sidebar.tsx expanded state */
+  --sidebar-width: 220px;
+  --sidebar-transition: 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-@media (min-width: 768px) {
-  .app-main {
-    padding-left: 13.75rem;
-  }
+.app-main {
+  padding-top: 0;
+  padding-left: 0; /* Backgrounds span full width */
+}
 
-  .sidebar-collapsed .app-main {
-    padding-left: 3.375rem;
+/* Dynamic Page Offset synchronized via CSS variable */
+.page-offset {
+  transition: padding-left var(--sidebar-transition);
+  padding-left: var(--sidebar-width);
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
   }
+  .page-offset {
+    padding-left: 0;
+  }
+}
+
+/* Sidebar state overrides */
+:is(.sidebar-collapsed) {
+  --sidebar-width: 54px;
 }
 
 /* Editorial Engine Styles */

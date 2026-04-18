@@ -103,7 +103,12 @@ const ClickSpark = ({
         return true;
       });
 
-      animationId = requestAnimationFrame(draw);
+      if (sparksRef.current.length > 0) {
+        animationId = requestAnimationFrame(draw);
+      } else {
+        startTimeRef.current = null;
+        animationId = null;
+      }
     };
 
     animationId = requestAnimationFrame(draw);
@@ -129,6 +134,10 @@ const ClickSpark = ({
     }));
 
     sparksRef.current.push(...newSparks);
+    if (!animationId) {
+      startTimeRef.current = null; // reset start time for the new batch
+      animationId = requestAnimationFrame(draw);
+    }
   };
 
   return (

@@ -1,0 +1,146 @@
+/* ═══════════════════════════════════════════════
+   Activity Hub — Quantum Timeline Style
+   ═══════════════════════════════════════════════ */
+
+.activity-hub-container {
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  padding: 60px 20px;
+}
+
+/* ─── The Neural Thread ─── */
+.activity-timeline-line {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(34, 211, 238, 0.4) 10%,
+    rgba(34, 211, 238, 0.4) 90%,
+    transparent 100%
+  );
+  transform: translateX(-50%);
+  z-index: 0;
+}
+
+.timeline-item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 80px;
+  position: relative;
+  width: 100%;
+}
+
+/* ─── Pulse Nodes ─── */
+.activity-node {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #22d3ee;
+  z-index: 10;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+}
+
+.activity-node::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border: 1px solid rgba(34, 211, 238, 0.4);
+  border-radius: 50%;
+  animation: activity-pulse 2s infinite ease-out;
+}
+
+@keyframes activity-pulse {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* ─── Activity Cards (Side Branching) ─── */
+.activity-card-wrapper {
+  width: 42%;
+  position: relative;
+  z-index: 5;
+}
+
+.timeline-item:nth-child(even) .activity-card-wrapper {
+  margin-left: auto;
+  padding-left: 40px;
+}
+
+.timeline-item:nth-child(odd) .activity-card-wrapper {
+  margin-right: auto;
+  padding-right: 40px;
+  text-align: right;
+}
+
+.activity-stealth-card {
+  background: rgba(10, 14, 26, 0.4);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  min-width: 280px;
+  text-align: left;
+}
+
+.activity-stealth-card:hover {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(34, 211, 238, 0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.activity-type-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.type-like { color: #22d3ee; }
+.type-comment { color: #8b5cf6; }
+.type-connection { color: #10b981; }
+
+.activity-content-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 12px;
+}
+
+.activity-timestamp {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 500;
+}
+
+/* ─── Mobile Responsiveness ─── */
+@media (max-width: 768px) {
+  .activity-timeline-line {
+    left: 40px;
+  }
+  .activity-node {
+    left: 40px;
+  }
+  .activity-card-wrapper {
+    width: 100%;
+    padding-left: 80px !important;
+    padding-right: 0 !important;
+    margin-left: 0 !important;
+    text-align: left !important;
+  }
+}

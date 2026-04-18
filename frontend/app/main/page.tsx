@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef } from "react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import BorderGlow from "@/components/effects/BorderGlow";
 import StarBorder from "@/components/effects/StarBorder";
+import { useAuth } from "@backend/AuthProvider";
 import "./main.css";
 
 const SECTION_IDS = [
@@ -20,6 +21,7 @@ const SECTION_IDS = [
 
 export default function MainPage() {
   const router = useRouter();
+  const { user, userData, loading } = useAuth();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastActiveSectionRef = useRef<string>(SECTION_IDS[0]);
 
@@ -183,20 +185,23 @@ export default function MainPage() {
   }, [router]);
 
   return (
-    <StarfieldBackground className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
-      <KineticPage pageKey="main" className="relative z-10 flex min-h-screen w-full flex-col px-4 py-4">
-        <div className="flex w-full justify-end sticky top-4 z-50">
+    <StarfieldBackground className="relative min-h-screen w-full bg-[#06070f] text-white overflow-x-hidden">
+      {/* Top Gate Indicator - Moved outside KineticPage to prevent transform-capture */}
+      {!userData && !loading && (
+        <div className="fixed top-6 right-6 z-200">
           <KineticCard index={1}>
             <TransitionLink href="/login" className="group block">
               <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
-                <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
-                  <span>Sign In/Sign Up</span>
+                <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white uppercase tracking-widest">
+                  Sign In/Sign Up
                 </span>
               </StarBorder>
             </TransitionLink>
           </KineticCard>
         </div>
+      )}
 
+      <KineticPage pageKey="main" className="relative z-10 flex min-h-screen w-full flex-col px-4 py-4 page-offset">
         {/* Hero Section */}
         <section className="flex min-h-[90vh] w-full flex-col items-center justify-center relative">
           <KineticCard index={2}>

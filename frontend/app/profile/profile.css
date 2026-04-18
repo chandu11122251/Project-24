@@ -311,8 +311,14 @@
   scrollbar-width: none;
 }
 
-.modal-content::-webkit-scrollbar {
+.modal-content::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+.custom-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .modal-card {
@@ -409,25 +415,27 @@
   flex-direction: column;
   gap: 12px;
   margin-top: 12px;
-  max-height: 300px;
+  max-height: 240px;
   overflow-y: auto;
   padding-right: 8px;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.manage-posts-list::-webkit-scrollbar {
-  display: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding-top: 16px;
+  margin-bottom: 20px;
 }
 
 .manage-post-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
+  padding: 10px 14px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+.manage-post-item:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .manage-post-item__text {
@@ -437,6 +445,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: inherit;
 }
 
 .btn-delete-post {
@@ -444,9 +453,24 @@
   color: #ef4444;
   opacity: 0.6;
   cursor: pointer;
-  transition: opacity 0.2s ease;
+  transition: all 0.2s ease;
+  background: none;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-delete-post:hover {
   opacity: 1;
+  transform: scale(1.1);
+}
+
+.manage-section-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.2);
+  margin-bottom: 8px;
 }
