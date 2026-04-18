@@ -36,7 +36,7 @@ export const handleIdentitySynthesis = async (firebaseUser, provider) => {
 
   const { uid, displayName, photoURL } = firebaseUser;
   // Fallback for missing email (common with private GitHub profiles)
-  const email = firebaseUser.email || `${uid}@${provider}.user`;
+  const email = firebaseUser.email || firebaseUser.providerData[0]?.email || `${uid}@${provider}.user`;
   const identityDocId = `${provider}:${uid}`;
   const identityRef = doc(db, "auth_identities", identityDocId);
   const userRef = doc(db, "users", uid);

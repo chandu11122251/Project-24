@@ -49,25 +49,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         unsubscribeDoc = null;
       }
 
+      let unsubscribeUserDoc: (() => void) | null = null;
+
       if (firebaseUser?.uid) {
-        // v2 Schema: Use Firebase UID as the Firestore document key
-        const userDocRef = doc(db, "users", firebaseUser.uid);
+        // Resolve canonical Identity
+        const rawProvider = firebaseUser.providerData[0]?.providerId || "email";
+        const providerKey =
+          rawProvider === "google.com" ? "google"
+          : rawProvider === "github.com" ? "github"
+          : "email";
+
+        const identityRef = doc(db, "auth_identities", `${providerKey}:${firebaseUser.uid}`);
+        
         unsubscribeDoc = onSnapshot(
-          userDocRef,
-          (docSnap) => {
-            if (docSnap.exists()) {
-              const data = { id: docSnap.id, ...docSnap.data() } as any;
-              console.log("[Auth] onSnapshot: doc EXISTS, username:", data.username, "email:", data.email);
-              setUserData(data);
+          identityRef,
+          (identitySnap) => {
+            if (identitySnap.exists()) {
+              const canonicalUid = identitySnap.data().user_id;
+
+              if (unsubscribeUserDoc) unsubscribeUserDoc();
+
+              unsubscribeUserDoc = onSnapshot(
+                doc(db, "users", canonicalUid),
+                (docSnap) => {
+                  if (docSnap.exists()) {
+                    const data = { id: docSnap.id, ...docSnap.data() } as any;
+                    console.log("[Auth] onSnapshot: doc EXISTS, username:", data.username, "email:", data.email);
+                    setUserData(data);
+                  } else {
+                    console.warn("[Auth] onSnapshot: doc DOES NOT EXIST for canonical uid:", canonicalUid);
+                    setUserData(null);
+                  }
+                  setLoading(false);
+                  clearTimeout(safetyTimeout);
+                },
+                (error) => {
+                  console.error("[Auth] Firestore sync error:", error);
+                  setUserData(null);
+                  setLoading(false);
+                  clearTimeout(safetyTimeout);
+                }
+              );
             } else {
-              console.warn("[Auth] onSnapshot: doc DOES NOT EXIST for uid:", firebaseUser.uid);
-              setUserData(null);
+              console.log("[Auth] Identity doc not ready yet. Waiting...");
             }
-            setLoading(false);
-            clearTimeout(safetyTimeout);
           },
           (error) => {
-            console.error("[Auth] Firestore sync error:", error);
+            console.error("[Auth] Identity sync error:", error);
             setUserData(null);
             setLoading(false);
             clearTimeout(safetyTimeout);
@@ -78,6 +106,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
         clearTimeout(safetyTimeout);
       }
+
+      // Capture unsubscribe for outer useEffect cleanup
+      const originalUnsubscribeDoc = unsubscribeDoc;
+      unsubscribeDoc = () => {
+        if (originalUnsubscribeDoc) originalUnsubscribeDoc();
+        if (unsubscribeUserDoc) unsubscribeUserDoc();
+      };
     });
 
     return () => {
