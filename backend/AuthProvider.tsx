@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           userDocRef,
           (docSnap) => {
             if (docSnap.exists()) {
-              const data = { id: docSnap.id, ...docSnap.data() };
+              const data = { id: docSnap.id, ...docSnap.data() } as any;
               console.log("[Auth] onSnapshot: doc EXISTS, username:", data.username, "email:", data.email);
               setUserData(data);
             } else {
