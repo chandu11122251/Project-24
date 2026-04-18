@@ -1,0 +1,10 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "main": "auth.js",
+  "module": "auth.js",
+  "types": "AuthProvider.tsx",
+  "dependencies": {
+    "firebase": "^12.12.0"
+  }
+}
