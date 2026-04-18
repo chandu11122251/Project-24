@@ -30,11 +30,13 @@ import {
  * @returns {Promise<string>} The canonical user_id (UID of the primary user doc).
  */
 export const handleIdentitySynthesis = async (firebaseUser, provider) => {
-  if (!firebaseUser?.uid || !firebaseUser?.email) {
-    throw new Error("Invalid Firebase user object.");
+  if (!firebaseUser?.uid) {
+    throw new Error("Invalid Firebase user object: missing UID.");
   }
 
-  const { uid, email, displayName, photoURL } = firebaseUser;
+  const { uid, displayName, photoURL } = firebaseUser;
+  // Fallback for missing email (common with private GitHub profiles)
+  const email = firebaseUser.email || `${uid}@${provider}.user`;
   const identityDocId = `${provider}:${uid}`;
   const identityRef = doc(db, "auth_identities", identityDocId);
   const userRef = doc(db, "users", uid);
