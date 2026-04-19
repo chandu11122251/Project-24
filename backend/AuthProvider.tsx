@@ -74,28 +74,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 (docSnap) => {
                   if (docSnap.exists()) {
                     const data = { id: docSnap.id, ...docSnap.data() } as any;
-                    console.log("[Auth] onSnapshot: doc EXISTS, username:", data.username, "email:", data.email);
+                    console.log("[Auth] Session active:", data.username);
                     setUserData(data);
+                    setLoading(false);
+                    clearTimeout(safetyTimeout);
                   } else {
-                    console.warn("[Auth] onSnapshot: doc DOES NOT EXIST for canonical uid:", canonicalUid);
+                    // Silent wait for transaction completion
+                    console.log("[Auth] Awaiting profile synthesis...");
                     setUserData(null);
                   }
-                  setLoading(false);
-                  clearTimeout(safetyTimeout);
                 },
                 (error) => {
-                  console.error("[Auth] Firestore sync error:", error);
+                  console.error("[Auth] User doc sync error:", error);
                   setUserData(null);
                   setLoading(false);
                   clearTimeout(safetyTimeout);
                 }
               );
             } else {
-              console.log("[Auth] Identity doc not ready yet. Waiting...");
+              // Initial login fallback - wait silently for handleIdentitySynthesis to finish
+              console.log("[Auth] Indexing identity...");
             }
           },
           (error) => {
-            console.error("[Auth] Identity sync error:", error);
+            console.error("[Auth] Identity link error:", error);
             setUserData(null);
             setLoading(false);
             clearTimeout(safetyTimeout);
