@@ -8,7 +8,7 @@ import StarfieldBackground from "@/components/background/StarfieldBackground";
 import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
+  const { user, userData, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function ProfilePage() {
     }
   }, [user, loading, router]);
 
-  if (loading || !user) {
+  if (loading || !user || !userData) {
     return (
       <StarfieldBackground className="flex items-center justify-center min-h-screen bg-[#06070f]">
         <Loader2 className="animate-spin text-cyan-500" size={32} />
@@ -25,6 +25,6 @@ export default function ProfilePage() {
     );
   }
 
-  // Render the unified profile view for the current user
-  return <ProfileView targetUserId={user.uid} isSelf={true} />;
+  // Render the unified profile view for the current user using their canonical ID
+  return <ProfileView targetUserId={userData.id} isSelf={true} />;
 }

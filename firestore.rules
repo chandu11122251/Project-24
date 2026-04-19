@@ -142,9 +142,15 @@ service cloud.firestore {
     // NOTIFICATIONS
     // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     match /notifications/{notifId} {
-      allow read: if isAuth() && resource.data.user_id == request.auth.uid;
-      allow create: if isAuth(); // Any authenticated user can send a notification (e.g. follow)
-      allow update: if isAuth() && resource.data.user_id == request.auth.uid; // mark as read
+      allow read: if isAuth() && (
+        resource.data.user_id == request.auth.uid ||
+        get(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)).data.user_id == resource.data.user_id
+      );
+      allow create: if isAuth(); 
+      allow update: if isAuth() && (
+        resource.data.user_id == request.auth.uid ||
+        get(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)).data.user_id == resource.data.user_id
+      );
       allow delete: if isAuth() && resource.data.user_id == request.auth.uid;
     }
 
@@ -152,9 +158,15 @@ service cloud.firestore {
     // ACTIVITIES
     // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     match /activities/{activityId} {
-      allow read: if isAuth() && resource.data.user_id == request.auth.uid;
-      allow create: if isAuth() && request.resource.data.user_id == request.auth.uid;
-      allow delete: if false; // Deleted by scheduled Cloud Function only
+      allow read: if isAuth() && (
+        resource.data.user_id == request.auth.uid ||
+        get(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)).data.user_id == resource.data.user_id
+      );
+      allow create: if isAuth() && (
+        request.resource.data.user_id == request.auth.uid ||
+        get(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)).data.user_id == request.resource.data.user_id
+      );
+      allow delete: if false;
     }
 
     // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
