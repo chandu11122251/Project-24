@@ -8,7 +8,7 @@ import {
   getDocs, runTransaction, writeBatch,
   serverTimestamp, increment, Timestamp
 } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // IDENTITY SYNTHESIS
