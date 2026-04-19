@@ -1,0 +1,318 @@
+/* ═══════════════════════════════════════════════
+   Hackathons Page — Premium Card Grid
+   ═══════════════════════════════════════════════ */
+
+/* ─── Hero Icon Pulse ─── */
+.hackathons-hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  position: relative;
+  animation: hero-icon-breathe 3s ease-in-out infinite;
+}
+
+.hackathons-hero-icon::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 24px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.15) 0%, transparent 70%);
+  animation: hero-icon-glow 3s ease-in-out infinite;
+}
+
+@keyframes hero-icon-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+
+@keyframes hero-icon-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* ─── Grid Layout ─── */
+.hackathons-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .hackathons-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .hackathons-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ─── Card Wrapper (entrance animation) ─── */
+.hackathon-card-wrapper {
+  opacity: 0;
+  transform: translateY(28px) scale(0.97);
+  animation: card-entrance 0.6s ease-out forwards;
+}
+
+@keyframes card-entrance {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ─── BorderGlow wrapper override ─── */
+.hackathon-card-glow {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s ease;
+}
+
+.hackathon-card-glow:hover {
+  transform: translateY(-4px) scale(1.01);
+}
+
+/* ─── Card Interior ─── */
+.hackathon-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  min-height: 320px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle inner gradient overlay */
+.hackathon-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    transparent 40%,
+    transparent 80%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hackathon-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Card Header ─── */
+.hackathon-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+/* ─── Status Badges ─── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Live */
+.status-badge--live {
+  background: rgba(16, 185, 129, 0.1);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+.status-dot--live {
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.7);
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+/* Upcoming */
+.status-badge--upcoming {
+  background: rgba(251, 191, 36, 0.1);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.2);
+}
+.status-dot--upcoming {
+  background: #fbbf24;
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+
+/* Weekly */
+.status-badge--weekly {
+  background: rgba(96, 165, 250, 0.1);
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.2);
+}
+.status-dot--weekly {
+  background: #60a5fa;
+  box-shadow: 0 0 6px rgba(96, 165, 250, 0.5);
+}
+
+/* Monthly */
+.status-badge--monthly {
+  background: rgba(192, 132, 252, 0.1);
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.2);
+}
+.status-dot--monthly {
+  background: #c084fc;
+  box-shadow: 0 0 6px rgba(192, 132, 252, 0.5);
+}
+
+/* Completed */
+.status-badge--completed {
+  background: rgba(156, 163, 175, 0.1);
+  color: #9ca3af;
+  border-color: rgba(156, 163, 175, 0.2);
+}
+.status-dot--completed {
+  background: #9ca3af;
+  box-shadow: 0 0 6px rgba(156, 163, 175, 0.5);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.4); }
+}
+
+/* ─── Icon + Title ─── */
+.hackathon-card__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.hackathon-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  color: var(--icon-accent, #22d3ee);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--icon-accent, #22d3ee) 12%, transparent),
+    color-mix(in srgb, var(--icon-accent, #22d3ee) 4%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--icon-accent, #22d3ee) 18%, transparent);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hackathon-card-glow:hover .hackathon-card__icon {
+  transform: scale(1.08) rotate(-3deg);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--icon-accent, #22d3ee) 30%, transparent);
+}
+
+/* ─── Tags ─── */
+.hackathon-tag {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.25s ease;
+}
+
+.hackathon-card-glow:hover .hackathon-tag {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ─── Footer ─── */
+.hackathon-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ─── Join Button ─── */
+.hackathon-join-btn {
+  padding: 6px 16px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--btn-accent, #22d3ee) 60%, transparent),
+    color-mix(in srgb, var(--btn-accent, #22d3ee) 30%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--btn-accent, #22d3ee) 30%, transparent);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.hackathon-join-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.hackathon-join-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--btn-accent, #22d3ee) 40%, transparent);
+}
+
+.hackathon-join-btn:hover::before {
+  opacity: 1;
+}
+
+.hackathon-join-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* ─── Responsive polish ─── */
+@media (max-width: 639px) {
+  .hackathon-card {
+    padding: 20px;
+    min-height: 280px;
+  }
+
+  .hackathon-card__icon {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 10px;
+  }
+}
