@@ -273,6 +273,20 @@ export const createPost = async (userId, postData) => {
   });
   await batch.commit();
 
+  // --- Signal Broadcast (Fan-out) ---
+  // Notify followers of the new synthesis
+  try {
+    const followers = await getFollowers(userId, 50); // Get first 50 followers for efficiency
+    await Promise.all(followers.map(followerId => 
+      createNotification(followerId, "post_broadcast", { 
+        source_user_id: userId,
+        post_id: postRef.id
+      })
+    ));
+  } catch (err) {
+    console.error("[Post Broadcast] Neural transmission failed:", err);
+  }
+
   return postRef.id;
 };
 
@@ -432,6 +446,14 @@ export const toggleLike = async (userId, postId) => {
         expires_at: ninetyDays,
       });
 
+      // --- Signal Notification ---
+      if (postData.user_id && postData.user_id !== userId) {
+        createNotification(postData.user_id, "like", {
+          source_user_id: userId,
+          post_id: postId
+        }).catch(err => console.error("[Like Notif] Failed:", err));
+      }
+
       return true;
     }
   });
@@ -504,6 +526,14 @@ export const addComment = async (userId, postId, text, parentCommentId = null) =
       transaction.update(doc(db, "comments", parentCommentId), {
         reply_count: increment(1),
       });
+    }
+
+    // --- Signal Notification ---
+    if (postData.user_id && postData.user_id !== userId) {
+      createNotification(postData.user_id, "comment", {
+        source_user_id: userId,
+        post_id: postId
+      }).catch(err => console.error("[Comment Notif] Failed:", err));
     }
 
     return commentRef.id;
@@ -896,3 +926,11 @@ export const likePost = toggleLike;
 
 /** @deprecated Use getUserById or getUserByIdentifier */
 export const syncUserWithFirestore = handleIdentitySynthesis;
+
+/**
+ * Terminate the current session.
+ */
+export const signOutUser = async () => {
+  const auth = getAuth();
+  await signOut(auth);
+};

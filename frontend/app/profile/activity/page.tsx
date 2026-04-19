@@ -26,8 +26,8 @@ export default function ActivityPage() {
 
     const fetchActivity = async () => {
       try {
-        if (!user.uid) return;
-        const { activities: log } = await getActivityLog(user.uid);
+        if (!userData?.id) return;
+        const { activities: log } = await getActivityLog(userData.id);
         
         // Enrich activities with target data (post snippets or user names)
         const enriched = await Promise.all(log.map(async (act: any) => {

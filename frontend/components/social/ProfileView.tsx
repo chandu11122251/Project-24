@@ -14,7 +14,7 @@ import { useAuth } from "@backend/AuthProvider";
 import { 
   updateUserProfile, createPost, getActivityLog, toggleLike,
   getFollowing, deletePost, getRelationshipStatus, followUser, unfollowUser,
-  getUserByIdentifier, checkIfLiked
+  getUserByIdentifier, checkIfLiked, signOutUser
 } from "@backend/db";
 import { useRouter } from "next/navigation";
 import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
@@ -239,7 +239,7 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
     { label: "Edit Profile", icon: <UserCircle size={18} />, action: () => { setTempUsername(username); setTempAbout(aboutMe); setEditModalOpen(true); } },
     { label: "Activity Log", icon: <Activity size={18} />, action: () => router.push("/profile/activity") },
     { label: "Privacy Policy", icon: <Shield size={18} />, action: () => setPrivacyModalOpen(true) },
-    { label: "Log out", icon: <LogOut size={18} />, action: () => window.location.href = "/", danger: true },
+    { label: "Log out", icon: <LogOut size={18} />, action: async () => { await signOutUser(); router.push("/"); }, danger: true },
   ];
 
   return (

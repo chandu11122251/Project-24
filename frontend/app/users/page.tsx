@@ -21,7 +21,7 @@ interface UserProfile {
 }
 
 export default function UsersPage() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -37,7 +37,10 @@ export default function UsersPage() {
         querySnapshot.forEach((doc) => {
           fetchedUsers.push({ uid: doc.id, ...doc.data() });
         });
-        setUsers(fetchedUsers);
+        const filteredUsers = userData?.id 
+          ? fetchedUsers.filter(u => u.uid !== userData.id)
+          : fetchedUsers;
+        setUsers(filteredUsers);
 
         // Fetch following status if logged in
         if (user?.uid) {

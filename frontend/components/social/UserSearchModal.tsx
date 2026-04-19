@@ -14,7 +14,7 @@ interface UserSearchModalProps {
 }
 
 export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProps) {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, userData } = useAuth();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +29,8 @@ export default function UserSearchModal({ isOpen, onClose }: UserSearchModalProp
       setIsLoading(true);
       try {
         const users = await searchUsersByPrefix(query);
-        // Exclude current user from results
-        setResults(users.filter(u => u.id !== currentUser?.uid));
+        // Exclude current user by canonical ID
+        setResults(users.filter(u => u.id !== userData?.id));
       } catch (err) {
         console.error("Search failed:", err);
       } finally {
