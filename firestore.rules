@@ -144,7 +144,11 @@ service cloud.firestore {
     // ACTIVITIES
     // ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ
     match /activities/{activityId} {
-      allow read: if isOwner(resource.data.user_id);
+      allow read: if isAuth() && (
+        resource.data.user_id == request.auth.uid || 
+        resource.data.owner_uid == request.auth.uid ||
+        isOwner(resource.data.user_id)
+      );
       allow create: if isOwner(request.resource.data.user_id);
       allow delete: if false;
     }
