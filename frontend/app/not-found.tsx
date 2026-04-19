@@ -36,13 +36,8 @@ export default function NotFound() {
             </h1>
             
             <div className="space-y-2 border-l border-white/5 pl-6 text-left">
-              <p className="text-sm md:text-base text-white/60 leading-relaxed tracking-tight">
-                <span className="text-cyan-500 font-bold">{glitchText}</span>
-                <br />
-                does not exist
-                <br />
-                how did u end up here
-                <span className="text-cyan-500 animate-pulse cursor-help ml-1">twn</span>...
+              <p className="text-sm md:text-base text-white/60 leading-relaxed tracking-tight whitespace-nowrap">
+                <span className="text-cyan-500 font-bold">{glitchText}</span> does not exist how did u end up here <span className="text-cyan-500 animate-pulse cursor-help">twn</span>...
               </p>
               
               <div className="pt-4 flex items-center gap-2">
