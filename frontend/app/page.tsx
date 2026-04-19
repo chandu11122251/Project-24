@@ -47,7 +47,7 @@ export default function Home() {
               
               {/* Animated Ring */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-all duration-700">
-                <div className="absolute inset-[-100%] bg-conic-to-r from-transparent via-cyan-500/40 to-transparent animate-[spin_4s_linear_infinite]" />
+                <div className="absolute -inset-full bg-conic-to-r from-transparent via-cyan-500/40 to-transparent animate-[spin_4s_linear_infinite]" />
               </div>
               
               {/* Button Content */}

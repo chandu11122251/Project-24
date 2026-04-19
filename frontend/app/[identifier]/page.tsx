@@ -7,6 +7,8 @@ import { getUserByIdentifier } from "@backend/db";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import { Loader2 } from "lucide-react";
 
+import ProfileSkeleton from "@/components/social/ProfileSkeleton";
+
 export default function UniversalProfilePage() {
   const params = useParams();
   const identifier = params.identifier as string;
@@ -35,14 +37,7 @@ export default function UniversalProfilePage() {
   }, [identifier]);
 
   if (loading) {
-    return (
-      <StarfieldBackground className="flex items-center justify-center min-h-screen bg-[#06070f] page-offset">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="animate-spin text-cyan-500" size={40} />
-          <p className="text-[10px] uppercase tracking-[0.5em] text-cyan-400 font-bold animate-pulse">Scanning Starfield...</p>
-        </div>
-      </StarfieldBackground>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (error || !targetId) {
