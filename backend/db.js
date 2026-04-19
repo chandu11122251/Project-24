@@ -861,6 +861,29 @@ export const createNotification = async (userId, type, payload = {}) => {
   });
 
   await batch.commit();
+
+  // --- Notification Pruning (Keep last 15, delete oldest 8) ---
+  try {
+    const qCount = query(collection(db, "notifications"), where("user_id", "==", userId));
+    const snapCount = await getDocs(qCount);
+    
+    if (snapCount.size > 15) {
+      const qOld = query(
+        collection(db, "notifications"),
+        where("user_id", "==", userId),
+        orderBy("created_at", "asc"),
+        limit(8)
+      );
+      const snapOld = await getDocs(qOld);
+      const pruneBatch = writeBatch(db);
+      snapOld.docs.forEach((doc) => pruneBatch.delete(doc.ref));
+      await pruneBatch.commit();
+      console.log(`[Cleaner] Pruned 8 notifications for ${userId}`);
+    }
+  } catch (err) {
+    console.error("[Cleaner] Pruning sequence failed:", err);
+  }
+
   return notifRef.id;
 };
 
@@ -925,9 +948,13 @@ export const getNotifications = async (userId, pageSize = 20, cursor = null) => 
  * @param {DocumentSnapshot|null} cursor
  */
 export const getActivityLog = async (userId, pageSize = 20, cursor = null) => {
+  const auth = getAuth();
+  const currentUid = auth.currentUser?.uid;
+  if (!currentUid) return { activities: [], lastVisible: null };
+
   let q = query(
     collection(db, "activities"),
-    where("user_id", "==", userId),
+    where("owner_uid", "==", currentUid),
     orderBy("created_at", "desc"),
     limit(pageSize)
   );
