@@ -226,8 +226,9 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
       await createPost(currentUserData.id, { caption: newPostContent });
       setNewPostContent("");
       setNewPostModalOpen(false);
-    } catch (err) {
-      alert("Synthesis failed.");
+    } catch (err: any) {
+      console.error("[Post] Synthesis failed:", err);
+      alert(`Synthesis failed: ${err.message || "Unknown error"}`);
     } finally {
       setIsPosting(false);
     }

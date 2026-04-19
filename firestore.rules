@@ -15,8 +15,10 @@ service cloud.firestore {
     function isOwner(userId) {
       return isAuth() && (
         request.auth.uid == userId ||
-        (exists(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)) &&
-         get(/databases/$(database)/documents/auth_identities/$(request.auth.token.firebase.sign_in_provider + ':' + request.auth.uid)).data.user_id == userId)
+        (exists(/databases/$(database)/documents/auth_identities/$( 'google.com:' + request.auth.uid)) && 
+         get(/databases/$(database)/documents/auth_identities/$( 'google.com:' + request.auth.uid)).data.user_id == userId) ||
+        (exists(/databases/$(database)/documents/auth_identities/$( 'github.com:' + request.auth.uid)) && 
+         get(/databases/$(database)/documents/auth_identities/$( 'github.com:' + request.auth.uid)).data.user_id == userId)
       );
     }
 
