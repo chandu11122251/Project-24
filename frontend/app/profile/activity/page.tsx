@@ -16,7 +16,7 @@ import "./activity.css";
 
 // ─── Component ───
 export default function ActivityPage() {
-  const { user } = useAuth();
+  const { user, userData } = useAuth();
   const [activities, setActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataCache, setDataCache] = useState<Record<string, any>>({});
