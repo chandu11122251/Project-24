@@ -13,6 +13,7 @@ import "../profile/profile.css";
 
 interface UserProfile {
   uid: string;
+  username?: string;
   name?: string;
   email?: string;
   bio?: string;
@@ -30,7 +31,7 @@ export default function UsersPage() {
     const fetchUsersAndFollowing = async () => {
       try {
         // Fetch all users
-        const q = query(collection(db, "users"), orderBy("name", "asc"));
+        const q = query(collection(db, "users"), orderBy("username", "asc"));
         const querySnapshot = await getDocs(q);
         const fetchedUsers: UserProfile[] = [];
         querySnapshot.forEach((doc) => {
@@ -55,7 +56,7 @@ export default function UsersPage() {
   }, [user]);
 
   const handleToggleFollow = async (targetId: string) => {
-    if (!user?.email || actionLoading) return;
+    if (!user?.uid || actionLoading) return;
     setActionLoading(targetId);
     
     const isCurrentlyFollowing = followingIds.has(targetId);
@@ -125,7 +126,7 @@ export default function UsersPage() {
                       </Link>
                     </div>
                     
-                    <h3 className="text-lg font-bold text-white mb-1">{member.name || "Anonymous User"}</h3>
+                    <h3 className="text-lg font-bold text-white mb-1">{member.username || member.name || "Anonymous User"}</h3>
                     <p className="text-xs text-white/40 mb-4 truncate">
                       {member.email}
                     </p>

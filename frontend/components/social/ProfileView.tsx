@@ -150,7 +150,7 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
   const profilePhoto = displayData?.profile_picture;
   
   const handleSaveProfile = async () => {
-    if (!user || !user.email) return;
+    if (!user?.uid) return;
     setIsSaving(true);
     try {
       await updateUserProfile(user.uid, {
@@ -160,9 +160,10 @@ export default function ProfileView({ targetUserId, isSelf: initialIsSelf }: Pro
       setEditModalOpen(false);
       // Update local state if it's the current user's profile
       if (isSelf) {
-        setTargetUserData((prev: any) => ({ ...prev, name: tempUsername, bio: tempAbout }));
+        setTargetUserData((prev: any) => ({ ...prev, username: tempUsername, bio: tempAbout }));
       }
     } catch (err) {
+      console.error("Save error:", err);
       alert("Failed to update profile.");
     } finally {
       setIsSaving(false);
