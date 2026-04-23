@@ -196,7 +196,7 @@ export default function ChallengeDetailPage() {
           <h2 className="ready-box-title">Ready to Begin?</h2>
           <p className="ready-box-subtitle">Complete the external challenge to earn your badges.</p>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8">
             <button
               onClick={handleJoin}
               disabled={joining || hasJoined}
@@ -227,7 +227,7 @@ export default function ChallengeDetailPage() {
             )}
           </div>
 
-          <div className="mt-10 flex flex-col items-center gap-3">
+          <div className="mt-6 flex flex-col items-center gap-3">
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map(i => (
                 <div key={i} className="w-8 h-8 rounded-full border-2 border-[#06070f] bg-white/10 overflow-hidden">
