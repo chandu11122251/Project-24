@@ -1,5 +1,7 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import BorderGlow from "@/components/effects/BorderGlow";
@@ -17,169 +19,22 @@ import {
   Sparkles,
 } from "lucide-react";
 import "./challenges.css";
+import { useAuth } from "@backend/AuthProvider";
+import { getChallenges } from "@backend/db.js";
 
-type Challenge = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced" | "All Levels";
-  duration: string;
-  participants: number;
-  icon: React.ReactNode;
-  accentColor: string;
-  glowColor: string;
-  gradientColors: [string, string, string];
-  tags: string[];
-  status: "Live" | "Upcoming" | "Weekly" | "Monthly";
+import { Challenge } from "@/types/challenge";
+
+const IconMap: Record<string, ReactNode> = {
+  Swords: <Swords className="h-6 w-6" />,
+  Palette: <Palette className="h-6 w-6" />,
+  Brain: <Brain className="h-6 w-6" />,
+  Timer: <Timer className="h-6 w-6" />,
+  Sparkles: <Sparkles className="h-6 w-6" />,
+  Users: <Users className="h-6 w-6" />,
+  Code2: <Code2 className="h-6 w-6" />,
+  Flame: <Flame className="h-6 w-6" />,
+  Trophy: <Trophy className="h-6 w-6" />,
 };
-
-const challenges: Challenge[] = [
-  {
-    id: "coding-contest",
-    title: "Coding Contest Arena",
-    description:
-      "Compete head-to-head in timed algorithm battles. Solve complex problems under pressure, climb the leaderboard, and earn your rank among the best coders.",
-    category: "Competition",
-    difficulty: "Intermediate",
-    duration: "2 Hours",
-    participants: 342,
-    icon: <Swords className="h-6 w-6" />,
-    accentColor: "#f97316",
-    glowColor: "25 85 65",
-    gradientColors: ["#f97316", "#fb923c", "#ea580c"],
-    tags: ["Algorithms", "Speed", "Ranked"],
-    status: "Live",
-  },
-  {
-    id: "vibe-coding",
-    title: "Vibe Coding Sessions",
-    description:
-      "No pressure, no deadlines — just vibes. Join ambient coding rooms with lo-fi beats, build side projects, and share creative experiments with the community.",
-    category: "Creative",
-    difficulty: "All Levels",
-    duration: "Open-ended",
-    participants: 189,
-    icon: <Palette className="h-6 w-6" />,
-    accentColor: "#a855f7",
-    glowColor: "280 75 65",
-    gradientColors: ["#a855f7", "#c084fc", "#7c3aed"],
-    tags: ["Chill", "Side Projects", "Creative"],
-    status: "Live",
-  },
-  {
-    id: "dsa-sprint",
-    title: "7-Day DSA Sprint",
-    description:
-      "One focused data structure problem per day for a week. Post your solution with explanations, get peer reviews, and build deep algorithmic intuition.",
-    category: "Learning",
-    difficulty: "Beginner",
-    duration: "7 Days",
-    participants: 527,
-    icon: <Brain className="h-6 w-6" />,
-    accentColor: "#22d3ee",
-    glowColor: "190 80 70",
-    gradientColors: ["#22d3ee", "#67e8f9", "#06b6d4"],
-    tags: ["DSA", "Daily", "Peer Review"],
-    status: "Weekly",
-  },
-  {
-    id: "speed-debug",
-    title: "Speed Debugging Blitz",
-    description:
-      "A buggy codebase drops every hour. Race to find and fix all bugs before the timer runs out. Sharpens real-world debugging instincts under fire.",
-    category: "Competition",
-    difficulty: "Advanced",
-    duration: "60 Min",
-    participants: 156,
-    icon: <Timer className="h-6 w-6" />,
-    accentColor: "#ef4444",
-    glowColor: "0 80 65",
-    gradientColors: ["#ef4444", "#f87171", "#dc2626"],
-    tags: ["Debugging", "Timed", "Hardcore"],
-    status: "Upcoming",
-  },
-  {
-    id: "ui-challenge",
-    title: "Frontend Craft Challenge",
-    description:
-      "Pixel-perfect UI recreation from Dribbble shots. Build stunning interfaces with clean code, smooth animations, and responsive design in 48 hours.",
-    category: "Creative",
-    difficulty: "Intermediate",
-    duration: "48 Hours",
-    participants: 213,
-    icon: <Sparkles className="h-6 w-6" />,
-    accentColor: "#ec4899",
-    glowColor: "330 80 65",
-    gradientColors: ["#ec4899", "#f472b6", "#db2777"],
-    tags: ["CSS", "UI/UX", "Design"],
-    status: "Monthly",
-  },
-  {
-    id: "team-hackathon",
-    title: "48hr Team Hackathon",
-    description:
-      "Form squads, pick a track, and ship a working prototype in 48 hours. Mentors, workshops, and prizes await. Build something the world needs.",
-    category: "Hackathon",
-    difficulty: "All Levels",
-    duration: "48 Hours",
-    participants: 480,
-    icon: <Users className="h-6 w-6" />,
-    accentColor: "#10b981",
-    glowColor: "160 75 60",
-    gradientColors: ["#10b981", "#34d399", "#059669"],
-    tags: ["Teams", "Prototype", "Prizes"],
-    status: "Upcoming",
-  },
-  {
-    id: "code-golf",
-    title: "Code Golf Tournament",
-    description:
-      "Write the shortest possible solution. Every character counts. Push language features to their limit and discover elegant one-line solutions.",
-    category: "Competition",
-    difficulty: "Advanced",
-    duration: "3 Hours",
-    participants: 98,
-    icon: <Code2 className="h-6 w-6" />,
-    accentColor: "#eab308",
-    glowColor: "50 85 60",
-    gradientColors: ["#eab308", "#facc15", "#ca8a04"],
-    tags: ["Minimalism", "Languages", "Fun"],
-    status: "Weekly",
-  },
-  {
-    id: "streak-challenge",
-    title: "30-Day Code Streak",
-    description:
-      "Commit code every single day for 30 days. Build an unbreakable habit. Track your streak with a heatmap and unlock milestone badges.",
-    category: "Learning",
-    difficulty: "Beginner",
-    duration: "30 Days",
-    participants: 734,
-    icon: <Flame className="h-6 w-6" />,
-    accentColor: "#f59e0b",
-    glowColor: "38 90 65",
-    gradientColors: ["#f59e0b", "#fbbf24", "#d97706"],
-    tags: ["Consistency", "Habit", "Streak"],
-    status: "Live",
-  },
-  {
-    id: "open-source-quest",
-    title: "Open Source Quest",
-    description:
-      "Land your first (or 50th) open-source contribution. Curated good-first-issues, mentorship pairing, and a supportive community to guide you through.",
-    category: "Learning",
-    difficulty: "All Levels",
-    duration: "Ongoing",
-    participants: 312,
-    icon: <Trophy className="h-6 w-6" />,
-    accentColor: "#3b82f6",
-    glowColor: "220 80 65",
-    gradientColors: ["#3b82f6", "#60a5fa", "#2563eb"],
-    tags: ["OSS", "GitHub", "Mentorship"],
-    status: "Live",
-  },
-];
 
 const statusConfig: Record<
   Challenge["status"],
@@ -205,6 +60,11 @@ const statusConfig: Record<
     dotClass: "status-dot--monthly",
     badgeClass: "status-badge--monthly",
   },
+  Completed: {
+    label: "COMPLETED",
+    dotClass: "status-dot--completed",
+    badgeClass: "status-badge--completed",
+  },
 };
 
 const difficultyColor: Record<Challenge["difficulty"], string> = {
@@ -215,6 +75,21 @@ const difficultyColor: Record<Challenge["difficulty"], string> = {
 };
 
 export default function ChallengesPage() {
+  const { user, loading: authLoading } = useAuth();
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      try {
+        const data = await getChallenges();
+        setChallenges(data as Challenge[]);
+      } catch (err) {
+        console.error("Failed to fetch challenges:", err);
+      }
+    };
+    fetchChallenges();
+  }, []);
+
   return (
     <StarfieldBackground className="relative min-h-screen w-full overflow-hidden bg-[#06070f] text-white">
       {/* Nav */}
@@ -237,13 +112,26 @@ export default function ChallengesPage() {
           </svg>
           Back to Home
         </Link>
-        <Link href="/login" className="group">
-          <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
-            <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
-              Sign In
-            </span>
-          </StarBorder>
-        </Link>
+        <div className="flex items-center gap-4">
+          {!user && !authLoading && (
+            <Link href="/login" className="group">
+              <StarBorder as="span" color="cyan" speed="5s" thickness={1}>
+                <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-cyan-100 transition-colors duration-200 group-hover:text-white">
+                  Sign In
+                </span>
+              </StarBorder>
+            </Link>
+          )}
+          {user && (
+            <Link href="/challenges/create" className="group">
+              <StarBorder as="span" color="purple" speed="5s" thickness={1}>
+                <span className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold text-purple-100 transition-colors duration-200 group-hover:text-white">
+                  Create Challenge
+                </span>
+              </StarBorder>
+            </Link>
+          )}
+        </div>
       </nav>
 
       {/* Hero */}
@@ -251,7 +139,7 @@ export default function ChallengesPage() {
         <div className="challenges-hero-icon mb-6">
           <Zap className="h-10 w-10 text-cyan-400" />
         </div>
-        <h1 className="text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-r from-cyan-300 via-white to-cyan-300 bg-clip-text text-transparent pb-2">
+        <h1 className="text-5xl md:text-6xl font-bold tracking-tight bg-linear-to-r from-cyan-300 via-white to-cyan-300 bg-clip-text text-transparent pb-2">
           Challenges
         </h1>
         <p className="mt-4 max-w-2xl text-lg text-white/60 leading-relaxed">
@@ -264,7 +152,7 @@ export default function ChallengesPage() {
         <div className="flex flex-wrap items-center justify-center gap-8 mt-10">
           <div className="flex flex-col items-center">
             <span className="text-2xl font-bold text-cyan-400">
-              {challenges.reduce((a, c) => a + c.participants, 0).toLocaleString()}+
+              {challenges.reduce((a: number, c: Challenge) => a + (c.participants || 0), 0).toLocaleString()}+
             </span>
             <span className="text-xs text-white/40 uppercase tracking-wider mt-1">
               Participants
@@ -282,7 +170,7 @@ export default function ChallengesPage() {
           <div className="w-px h-8 bg-white/10" />
           <div className="flex flex-col items-center">
             <span className="text-2xl font-bold text-emerald-400">
-              {challenges.filter((c) => c.status === "Live").length}
+              {challenges.filter((c: Challenge) => c.status === "Live").length}
             </span>
             <span className="text-xs text-white/40 uppercase tracking-wider mt-1">
               Live Now
@@ -294,7 +182,7 @@ export default function ChallengesPage() {
       {/* Cards grid */}
       <section className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-24">
         <div className="challenges-grid">
-          {challenges.map((challenge, idx) => (
+          {challenges.map((challenge: Challenge, idx: number) => (
             <div
               key={challenge.id}
               className="challenge-card-wrapper"
@@ -302,15 +190,15 @@ export default function ChallengesPage() {
             >
               <BorderGlow
                 edgeSensitivity={28}
-                glowColor={challenge.glowColor}
+                glowColor={challenge.status === "Completed" ? "100 0 50" : challenge.glowColor}
                 backgroundColor="#0a0e1a"
                 borderRadius={20}
                 glowRadius={24}
-                glowIntensity={0.7}
+                glowIntensity={challenge.status === "Completed" ? 0.2 : 0.7}
                 coneSpread={22}
                 animated={false}
                 colors={challenge.gradientColors}
-                className="challenge-card-glow h-full"
+                className={`challenge-card-glow h-full ${challenge.status === "Completed" ? "grayscale opacity-80" : ""}`}
               >
                 <article className="challenge-card" id={`challenge-${challenge.id}`}>
                   {/* Status badge */}
@@ -336,11 +224,11 @@ export default function ChallengesPage() {
                       className="challenge-card__icon"
                       style={
                         {
-                          "--icon-accent": challenge.accentColor,
+                          "--icon-accent": challenge.status === "Completed" ? "#666" : challenge.accentColor,
                         } as React.CSSProperties
                       }
                     >
-                      {challenge.icon}
+                      {challenge.icon && IconMap[challenge.icon as string] ? IconMap[challenge.icon as string] : <Zap className="h-6 w-6" />}
                     </div>
                     <div>
                       <p className="text-[10px] uppercase tracking-[0.2em] text-white/40 mb-0.5">
@@ -378,16 +266,19 @@ export default function ChallengesPage() {
                         {challenge.participants}
                       </span>
                     </div>
-                    <button
-                      className="challenge-join-btn"
+                    <Link
+                      href={`/challenges/${challenge.id}`}
+                      className="challenge-join-btn text-center flex items-center justify-center"
                       style={
                         {
-                          "--btn-accent": challenge.accentColor,
+                          "--btn-accent": challenge.status === "Completed" ? "#444" : challenge.accentColor,
+                          pointerEvents: challenge.status === "Completed" ? "none" : "auto",
+                          opacity: challenge.status === "Completed" ? 0.5 : 1
                         } as React.CSSProperties
                       }
                     >
-                      Join Challenge
-                    </button>
+                      {challenge.status === "Completed" ? "Archived" : "View Details"}
+                    </Link>
                   </div>
                 </article>
               </BorderGlow>
