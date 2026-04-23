@@ -171,5 +171,20 @@ service cloud.firestore {
       allow write: if isAuth(); // Writes come from createPost in db.js
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // CHALLENGES
+    // ─────────────────────────────────────────────────────────────────────────────
+    match /challenges/{challengeId} {
+      allow read, create: if isAuth();
+      allow update: if isAuth() && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['participants', 'updated_at'])
+      );
+    }
+
+    match /challenge_participants/{participantId} {
+      // participantId is {userId}_{challengeId}
+      allow read, create: if isAuth() && participantId.startsWith(request.auth.uid + "_");
+    }
+
   }
 }
