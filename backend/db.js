@@ -799,8 +799,86 @@ export const blockUser = async (blockerId, blockedId) => {
   // Remove follow relationship both ways (best-effort cleanup)
   batch.delete(doc(db, "follows", `${blockerId}_${blockedId}`));
   batch.delete(doc(db, "follows", `${blockedId}_${blockerId}`));
-
   await batch.commit();
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHALLENGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates a new challenge.
+ * @param {Object} data - Challenge metadata.
+ */
+export const createChallenge = async (data) => {
+  const challengeRef = await addDoc(collection(db, "challenges"), {
+    ...data,
+    participants: 0,
+    created_at: serverTimestamp(),
+    updated_at: serverTimestamp(),
+  });
+  return challengeRef.id;
+};
+
+/**
+ * Fetches all challenges ordered by creation date.
+ */
+export const getChallenges = async () => {
+  const q = query(collection(db, "challenges"), orderBy("created_at", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+};
+
+/**
+ * Joins a challenge atomically.
+ * Prevents duplicate joining via a transaction and composite document ID.
+ * @param {string} challengeId
+ * @param {string} userId
+ */
+export const joinChallenge = async (challengeId, userId) => {
+  const participantId = `${userId}_${challengeId}`;
+  const participantRef = doc(db, "challenge_participants", participantId);
+  const challengeRef = doc(db, "challenges", challengeId);
+
+  return await runTransaction(db, async (transaction) => {
+    const participantSnap = await transaction.get(participantRef);
+    if (participantSnap.exists()) {
+      throw new Error("Already joined this challenge.");
+    }
+
+    transaction.set(participantRef, {
+      user_id: userId,
+      challenge_id: challengeId,
+      joined_at: serverTimestamp(),
+    });
+
+    transaction.update(challengeRef, {
+      participants: increment(1),
+      updated_at: serverTimestamp(),
+    });
+
+    return true;
+  });
+};
+
+/**
+ * Checks if a user has already joined a challenge.
+ * @param {string} userId
+ * @param {string} challengeId
+ */
+export const checkIfJoined = async (userId, challengeId) => {
+  if (!userId || !challengeId) return false;
+  const snap = await getDoc(doc(db, "challenge_participants", `${userId}_${challengeId}`));
+  return snap.exists();
+};
+
+/**
+ * Fetches a single challenge by ID.
+ * @param {string} challengeId
+ */
+export const getChallengeById = async (challengeId) => {
+  const snap = await getDoc(doc(db, "challenges", challengeId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 };
 
 /**
