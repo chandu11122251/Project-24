@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
-import { Library, RefreshCcw, Lightbulb, Trophy, Clock, Sparkles } from "lucide-react";
+import { Library, RefreshCcw, Lightbulb, Trophy, Clock, Sparkles, Lock } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import "../puzzle-games.css";
 import GlareHover from "@/components/ui/GlareHover";
+import { useAuth } from "@backend/AuthProvider";
+import { getDailyPuzzle, logPuzzleSolve, checkPuzzleSolved } from "@backend/db";
 
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -31,18 +33,128 @@ type GameState = {
 };
 
 export default function MinesweeperPage() {
+  const { user, loading: authLoading } = useAuth();
+  
   const [grid, setGrid] = useState<CellData[][]>([]);
   const [gameOver, setGameOver] = useState(false);
   const [win, setWin] = useState(false);
+  const [isAlreadySolved, setIsAlreadySolved] = useState(false);
   const [flags, setFlags] = useState(MS_MINES);
   const [timePassed, setTimePassed] = useState(0);
   const [hintCooldown, setHintCooldown] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
-
+  const [gameLoading, setGameLoading] = useState(true);
+  const [puzzleTag, setPuzzleTag] = useState<string>("#0");
 
   useEffect(() => {
-    initGrid();
-  }, []);
+    if (authLoading) return;
+    if (!user) {
+      setGameLoading(false);
+      initGrid(); // Fallback for guest view
+      return;
+    }
+
+    const loadGame = async () => {
+      try {
+        const daily = await getDailyPuzzle("minesweeper") as any;
+        if (daily) {
+          setPuzzleTag(daily.tag);
+          const solvedData = await checkPuzzleSolved(user.uid, daily.tag, "minesweeper");
+          
+          if (solvedData) {
+            setWin(true);
+            setIsAlreadySolved(true);
+            setTimePassed(solvedData.stats.duration);
+            setHintsUsed(solvedData.stats.hintsUsed);
+            // We'll reveal the whole map if already solved
+            if (daily.data.mineMap) {
+              revealSolvedMap(daily.data.mineMap);
+            }
+          } else if (daily.data.mineMap) {
+            generateFromMap(daily.data.mineMap);
+          } else {
+            initGrid();
+          }
+        } else {
+          initGrid();
+        }
+      } catch (err) {
+        console.error("Failed to load daily Minesweeper:", err);
+        initGrid();
+      } finally {
+        setGameLoading(false);
+      }
+    };
+
+    loadGame();
+  }, [user, authLoading]);
+
+  const generateFromMap = (mineMap: boolean[][]) => {
+    let newGrid: CellData[][] = Array(MS_ROWS).fill(null).map((_, r) => 
+      Array(MS_COLS).fill(null).map((_, c) => ({
+        isMine: mineMap[r][c],
+        isRevealed: false,
+        isFlagged: false,
+        neighborMines: 0
+      }))
+    );
+
+    // Calculate neighbors
+    for(let r=0; r<MS_ROWS; r++) {
+      for(let c=0; c<MS_COLS; c++) {
+        if(!newGrid[r][c].isMine) {
+          let count = 0;
+          for(let dr=-1; dr<=1; dr++){
+            for(let dc=-1; dc<=1; dc++){
+              if(dr===0 && dc===0) continue;
+              let nr = r + dr, nc = c + dc;
+              if(nr>=0 && nr<MS_ROWS && nc>=0 && nc<MS_COLS && newGrid[nr][nc].isMine) {
+                count++;
+              }
+            }
+          }
+          newGrid[r][c].neighborMines = count;
+        }
+      }
+    }
+    setGrid(newGrid);
+    setGameOver(false);
+    // Don't reset win here as it might have been set by loadGame
+    setFlags(MS_MINES);
+  };
+
+  const revealSolvedMap = (mineMap: boolean[][]) => {
+    let newGrid: CellData[][] = Array(MS_ROWS).fill(null).map((_, r) => 
+      Array(MS_COLS).fill(null).map((_, c) => ({
+        isMine: mineMap[r][c],
+        isRevealed: true, // Reveal everything
+        isFlagged: false,
+        neighborMines: 0
+      }))
+    );
+
+    // Calculate neighbors
+    for(let r=0; r<MS_ROWS; r++) {
+      for(let c=0; c<MS_COLS; c++) {
+        if(!newGrid[r][c].isMine) {
+          let count = 0;
+          for(let dr=-1; dr<=1; dr++){
+            for(let dc=-1; dc<=1; dc++){
+              if(dr===0 && dc===0) continue;
+              let nr = r + dr, nc = c + dc;
+              if(nr>=0 && nr<MS_ROWS && nc>=0 && nc<MS_COLS && newGrid[nr][nc].isMine) {
+                count++;
+              }
+            }
+          }
+          newGrid[r][c].neighborMines = count;
+        }
+      }
+    }
+    setGrid(newGrid);
+    setGameOver(false);
+    setFlags(0);
+  };
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -146,6 +258,12 @@ export default function MinesweeperPage() {
     }
     if (revealed === MS_ROWS * MS_COLS - MS_MINES) {
       setWin(true);
+      if (user) {
+        logPuzzleSolve(user.uid, puzzleTag, "minesweeper", {
+          duration: timePassed,
+          hintsUsed: hintsUsed
+        });
+      }
     }
   };
 
@@ -217,6 +335,12 @@ export default function MinesweeperPage() {
       }
       if (revealed === MS_ROWS * MS_COLS - MS_MINES) {
         setWin(true);
+        if (user) {
+          logPuzzleSolve(user.uid, puzzleTag, "minesweeper", {
+            duration: timePassed,
+            hintsUsed: hintsUsed
+          });
+        }
       }
     }
   };
@@ -238,7 +362,24 @@ export default function MinesweeperPage() {
       </nav>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center pt-24 pb-12 px-4">
-        <div className="flex flex-col items-center max-w-[540px] w-full bg-[#0a0e1a]/80 p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md">
+        {!user && !authLoading ? (
+          <div className="flex flex-col items-center max-w-[480px] w-full bg-[#0a0e1a]/80 p-10 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md text-center">
+            <div className="puzzle-card__icon bg-linear-to-br from-amber-400/20 to-orange-400/20 border-amber-400/30 mb-6" style={{"--icon-accent": "#fbbf24"} as any}>
+              <Lock className="h-8 w-8 text-amber-400" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Login Required</h2>
+            <p className="text-white/60 mb-8">You must be logged in to access the daily puzzles and track your progress.</p>
+            <Link href="/auth" className="win-card__btn win-card__btn--primary w-full">
+              SIGN IN TO PLAY
+            </Link>
+          </div>
+        ) : gameLoading ? (
+          <div className="flex flex-col items-center gap-4">
+             <div className="w-12 h-12 border-4 border-rose-500/30 border-t-rose-500 rounded-full animate-spin"></div>
+             <p className="text-rose-400 font-medium tracking-widest uppercase text-xs">Clearing the Stacks...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center max-w-[540px] w-full bg-[#0a0e1a]/80 p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md">
           <div className="flex items-center w-full justify-between mb-10">
             <div className="flex items-center gap-3">
                <div className="puzzle-card__icon shadow-none" style={{ marginBottom: 0, "--icon-accent": "#ec4899" } as React.CSSProperties}>
@@ -300,14 +441,16 @@ export default function MinesweeperPage() {
               </button>
               <button 
                 onClick={initGrid} 
-                className="flex items-center gap-2 game-btn m-0"
+                disabled={isAlreadySolved}
+                className="flex items-center gap-2 game-btn m-0 disabled:opacity-30"
               >
                 <RefreshCcw className="h-4 w-4 text-rose-400" /> Restart
               </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       <AnimatePresence>
         {win && (

@@ -1060,3 +1060,56 @@ export const signOutUser = async () => {
   const auth = getAuth();
   await signOut(auth);
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PUZZLE COMPLETIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Logs a puzzle solve for a user.
+ * @param {string} userId
+ * @param {string} puzzleTag - The tag of the puzzle (e.g., #1, #2)
+ * @param {string} type - "sudoku" | "minesweeper"
+ * @param {Object} stats - { duration, hintsUsed }
+ */
+export const logPuzzleSolve = async (userId, puzzleTag, type, stats) => {
+  const completionId = `${userId}_${type}_${puzzleTag.replace("#", "")}`;
+  const completionRef = doc(db, "puzzle_completions", completionId);
+
+  await setDoc(completionRef, {
+    user_id: userId,
+    puzzle_tag: puzzleTag,
+    puzzle_type: type,
+    stats,
+    completed_at: serverTimestamp(),
+  });
+};
+
+/**
+ * Checks if a user has already solved a specific puzzle.
+ * @param {string} userId
+ * @param {string} puzzleTag
+ * @param {string} type
+ */
+export const checkPuzzleSolved = async (userId, puzzleTag, type) => {
+  if (!userId || !puzzleTag) return null;
+  const completionId = `${userId}_${type}_${puzzleTag.replace("#", "")}`;
+  const snap = await getDoc(doc(db, "puzzle_completions", completionId));
+  return snap.exists() ? snap.data() : null;
+};
+
+/**
+ * Fetches the latest daily puzzle from Firestore.
+ * @param {string} type
+ */
+export const getDailyPuzzle = async (type) => {
+  const q = query(
+    collection(db, "daily_puzzles"),
+    where("type", "==", type),
+    orderBy("created_at", "desc"),
+    limit(1)
+  );
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() };
+};

@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import StarfieldBackground from "@/components/background/StarfieldBackground";
 import "../puzzle-games.css";
 import GlareHover from "@/components/ui/GlareHover";
-import { Puzzle, RefreshCcw, Undo2, Lightbulb, Trophy, Clock, Sparkles } from "lucide-react";
+import { Puzzle, RefreshCcw, Undo2, Lightbulb, Trophy, Clock, Sparkles, Lock } from "lucide-react";
+import { useAuth } from "@backend/AuthProvider";
+import { getDailyPuzzle, logPuzzleSolve, checkPuzzleSolved } from "@backend/db";
 
 const formatTime = (seconds: number) => {
   const m = Math.floor(seconds / 60).toString().padStart(2, '0');
@@ -38,23 +41,72 @@ const solutionSudokuBoard = [
 ];
 
 export default function MiniSudokuPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
   const [board, setBoard] = useState<string[][]>(initialSudokuBoard.map(r => [...r]));
+  const [initialBoard, setInitialBoard] = useState<string[][]>(initialSudokuBoard.map(r => [...r]));
+  const [solutionBoard, setSolutionBoard] = useState<string[][]>(solutionSudokuBoard.map(r => [...r]));
+  const [puzzleTag, setPuzzleTag] = useState<string>("#0");
+  
   const [history, setHistory] = useState<string[][][]>([]);
   const [win, setWin] = useState(false);
+  const [isAlreadySolved, setIsAlreadySolved] = useState(false);
   const [timePassed, setTimePassed] = useState(0);
   const [hintCooldown, setHintCooldown] = useState(false);
   const [hintsUsed, setHintsUsed] = useState(0);
+  const [gameLoading, setGameLoading] = useState(true);
 
+  // Fetch daily puzzle and check solved status
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setGameLoading(false);
+      return;
+    }
+
+    const initGame = async () => {
+      try {
+        const daily = await getDailyPuzzle("sudoku") as any;
+        if (daily) {
+          const solvedData = await checkPuzzleSolved(user.uid, daily.tag, "sudoku");
+          
+          if (solvedData) {
+            // Already solved: Load win state
+            setWin(true);
+            setIsAlreadySolved(true);
+            setTimePassed(solvedData.stats.duration);
+            setHintsUsed(solvedData.stats.hintsUsed);
+            
+            // Set board to solution so it looks finished
+            setBoard(daily.data.solution.map((r: any) => [...r]));
+          } else {
+            setBoard(daily.data.initial.map((r: any) => [...r]));
+          }
+
+          setInitialBoard(daily.data.initial);
+          setSolutionBoard(daily.data.solution);
+          setPuzzleTag(daily.tag);
+        }
+      } catch (err) {
+        console.error("Failed to load daily puzzle:", err);
+      } finally {
+        setGameLoading(false);
+      }
+    };
+
+    initGame();
+  }, [user, authLoading]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    if (!win) {
+    if (!win && !gameLoading && user) {
       interval = setInterval(() => {
         setTimePassed(t => t + 1);
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [win]);
+  }, [win, gameLoading, user]);
 
   useEffect(() => {
     (window as any).solveSudoku = () => setWin(true);
@@ -62,7 +114,7 @@ export default function MiniSudokuPage() {
   }, []);
 
   const handleChange = (r: number, c: number, v: string) => {
-    if (initialSudokuBoard[r][c] !== '0' || win) return;
+    if (initialBoard[r][c] !== '0' || win) return;
     if (!/^[1-9]?$/.test(v)) return;
     
     setHistory(prev => [...prev, board.map(row => [...row])]);
@@ -74,12 +126,21 @@ export default function MiniSudokuPage() {
     let isWin = true;
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        if (newBoard[i][j] !== solutionSudokuBoard[i][j]) {
+        if (newBoard[i][j] !== solutionBoard[i][j]) {
           isWin = false;
         }
       }
     }
-    setWin(isWin);
+    
+    if (isWin) {
+      setWin(true);
+      if (user) {
+        logPuzzleSolve(user.uid, puzzleTag, "sudoku", {
+          duration: timePassed,
+          hintsUsed: hintsUsed
+        });
+      }
+    }
   };
 
   const handleUndo = () => {
@@ -94,7 +155,7 @@ export default function MiniSudokuPage() {
     let emptyCells: {r:number, c:number}[] = [];
     for (let i = 0; i < 9; i++) {
       for (let j = 0; j < 9; j++) {
-        if (initialSudokuBoard[i][j] === '0' && board[i][j] !== solutionSudokuBoard[i][j]) {
+        if (initialBoard[i][j] === '0' && board[i][j] !== solutionBoard[i][j]) {
           emptyCells.push({r: i, c: j});
         }
       }
@@ -106,29 +167,57 @@ export default function MiniSudokuPage() {
       const target = emptyCells[Math.floor(Math.random() * emptyCells.length)];
       setHistory(prev => [...prev, board.map(row => [...row])]);
       const newBoard = [...board.map(row => [...row])];
-      newBoard[target.r][target.c] = solutionSudokuBoard[target.r][target.c];
+      newBoard[target.r][target.c] = solutionBoard[target.r][target.c];
       setBoard(newBoard);
       
       let isWin = true;
       for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-          if (newBoard[i][j] !== solutionSudokuBoard[i][j]) {
+          if (newBoard[i][j] !== solutionBoard[i][j]) {
             isWin = false;
           }
         }
       }
-      setWin(isWin);
+      if (isWin) {
+        setWin(true);
+        if (user) {
+          logPuzzleSolve(user.uid, puzzleTag, "sudoku", {
+            duration: timePassed,
+            hintsUsed: hintsUsed
+          });
+        }
+      }
     }
   };
 
   const checkError = (r: number, c: number) => {
     const val = board[r][c];
     if (val === '0') return false;
-    return val !== solutionSudokuBoard[r][c] && initialSudokuBoard[r][c] === '0';
+
+    // Check row conflict
+    for (let j = 0; j < 9; j++) {
+      if (j !== c && board[r][j] === val) return true;
+    }
+
+    // Check column conflict
+    for (let i = 0; i < 9; i++) {
+      if (i !== r && board[i][c] === val) return true;
+    }
+
+    // Check 3x3 grid conflict
+    const startRow = Math.floor(r / 3) * 3;
+    const startCol = Math.floor(c / 3) * 3;
+    for (let i = startRow; i < startRow + 3; i++) {
+      for (let j = startCol; j < startCol + 3; j++) {
+        if ((i !== r || j !== c) && board[i][j] === val) return true;
+      }
+    }
+
+    return false;
   };
 
   const reset = () => {
-    setBoard(initialSudokuBoard.map(r => [...r]));
+    setBoard(initialBoard.map(r => [...r]));
     setHistory([]);
     setWin(false);
   };
@@ -148,7 +237,24 @@ export default function MiniSudokuPage() {
       </nav>
 
       <div className="relative z-10 flex min-h-screen flex-col items-center justify-center pt-24 pb-12 px-4">
-        <div className="flex flex-col items-center max-w-[540px] w-full bg-[#0a0e1a]/80 p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md">
+        {!user && !authLoading ? (
+          <div className="flex flex-col items-center max-w-[480px] w-full bg-[#0a0e1a]/80 p-10 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md text-center">
+            <div className="puzzle-card__icon bg-linear-to-br from-amber-400/20 to-orange-400/20 border-amber-400/30 mb-6">
+              <Lock className="h-8 w-8 text-amber-400" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Login Required</h2>
+            <p className="text-white/60 mb-8">You must be logged in to access the daily puzzles and track your progress.</p>
+            <Link href="/auth" className="win-card__btn win-card__btn--primary w-full">
+              SIGN IN TO PLAY
+            </Link>
+          </div>
+        ) : gameLoading ? (
+          <div className="flex flex-col items-center gap-4">
+             <div className="w-12 h-12 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+             <p className="text-blue-400 font-medium tracking-widest uppercase text-xs">Syncing Daily Grid...</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center max-w-[540px] w-full bg-[#0a0e1a]/80 p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md">
           <div className="flex items-center w-full justify-between mb-8">
             <div className="flex items-center gap-3">
                <div className="puzzle-card__icon shadow-none" style={{ marginBottom: 0, "--icon-accent": "#3b82f6" } as React.CSSProperties}>
@@ -172,19 +278,30 @@ export default function MiniSudokuPage() {
               <span>Hints Used: {hintsUsed}</span>
             </div>
             <div className={`sudoku-grid mb-8 ${win ? 'sudoku-grid--win' : ''}`}>
-              {board.map((row, r) =>
-                row.map((val, c) => (
-                  <input
-                    key={`${r}-${c}`}
-                    type="text"
-                    className={`sudoku-cell ${initialSudokuBoard[r][c] !== '0' ? 'readonly' : ''} ${checkError(r,c) ? 'error' : ''}`}
-                    value={val === '0' ? '' : val}
-                    readOnly={initialSudokuBoard[r][c] !== '0' || win}
-                    onChange={e => handleChange(r, c, e.target.value)}
-                    maxLength={1}
-                  />
+              {[0, 1, 2].map(blockRow => (
+                [0, 1, 2].map(blockCol => (
+                  <div key={`${blockRow}-${blockCol}`} className="sudoku-block">
+                    {[0, 1, 2].map(rowOffset => (
+                      [0, 1, 2].map(colOffset => {
+                        const r = blockRow * 3 + rowOffset;
+                        const c = blockCol * 3 + colOffset;
+                        const val = board[r][c];
+                        return (
+                          <input
+                            key={`${r}-${c}`}
+                            type="text"
+                            className={`sudoku-cell ${initialBoard[r][c] !== '0' ? 'readonly' : ''} ${checkError(r,c) ? 'error' : ''}`}
+                            value={val === '0' ? '' : val}
+                            readOnly={initialBoard[r][c] !== '0' || win}
+                            onChange={e => handleChange(r, c, e.target.value)}
+                            maxLength={1}
+                          />
+                        );
+                      })
+                    ))}
+                  </div>
                 ))
-              )}
+              ))}
             </div>
 
             <div className="game-status text-emerald-400 mb-6 h-6">{win ? "Puzzle Solved! Great job." : ""}</div>
@@ -209,14 +326,16 @@ export default function MiniSudokuPage() {
               </button>
               <button 
                 onClick={reset} 
-                className="flex items-center gap-2 game-btn m-0"
+                disabled={isAlreadySolved}
+                className="flex items-center gap-2 game-btn m-0 disabled:opacity-30"
               >
                 <RefreshCcw className="h-4 w-4 text-cyan-400" /> Restart
               </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       <AnimatePresence>
         {win && (

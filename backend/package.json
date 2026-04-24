@@ -2,6 +2,16 @@
   "name": "backend",
   "version": "1.0.0",
   "main": "auth.js",
-  "module": "auth.js",
-  "types": "AuthProvider.tsx"
+  "type": "module",
+  "scripts": {
+    "start": "node cron.js",
+    "dev": "node cron.js",
+    "generate": "node services/puzzleGenerator.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.21.0",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.4.7",
+    "firebase-admin": "^13.1.0"
+  }
 }

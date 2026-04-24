@@ -186,5 +186,20 @@ service cloud.firestore {
       allow read, create: if isAuth() && participantId.startsWith(request.auth.uid + "_");
     }
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // PUZZLES
+    // ─────────────────────────────────────────────────────────────────────────────
+    match /daily_puzzles/{puzzleId} {
+      allow read: if isAuth();
+      allow write: if false; // Only backend (Admin SDK) should write
+    }
+
+    match /puzzle_completions/{completionId} {
+      // completionId is {userId}_{type}_{tag}
+      allow read, create: if isAuth() && completionId.startsWith(request.auth.uid + "_");
+      allow update: if isAuth() && completionId.startsWith(request.auth.uid + "_");
+      allow delete: if false;
+    }
+
   }
 }
